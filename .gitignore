@@ -263,3 +263,6 @@ security-scan-results/
 # Cursor
 .cursorignore
 .cursorindexingignore
+
+# MkDocs build output
+site/

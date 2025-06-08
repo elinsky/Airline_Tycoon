@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Airline Tycoon - Route Map Demo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #2c3e50;
+            overflow: hidden;
+        }
+
+        .container {
+            display: flex;
+            height: 100vh;
+        }
+
+        /* Map Section */
+        .map-container {
+            flex: 1;
+            position: relative;
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            overflow: hidden;
+        }
+
+        .map-canvas {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Dashboard Section */
+        .dashboard {
+            width: 320px;
+            background: #34495e;
+            padding: 20px;
+            box-shadow: -5px 0 20px rgba(0,0,0,0.3);
+            overflow-y: auto;
+        }
+
+        .dashboard h2 {
+            color: #ecf0f1;
+            font-size: 24px;
+            margin-bottom: 20px;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .metric-card {
+            background: #2c3e50;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+            transition: transform 0.2s;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .metric-title {
+            color: #95a5a6;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+
+        .metric-value {
+            color: #ecf0f1;
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .metric-change {
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .metric-change.positive {
+            color: #2ecc71;
+        }
+
+        .metric-change.negative {
+            color: #e74c3c;
+        }
+
+        .route-info {
+            background: #2c3e50;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .route-title {
+            color: #ecf0f1;
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .route-detail {
+            display: flex;
+            justify-content: space-between;
+            color: #95a5a6;
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+
+        .route-detail span:last-child {
+            color: #ecf0f1;
+            font-weight: bold;
+        }
+
+        .demand-chart {
+            background: #2c3e50;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 15px;
+            height: 200px;
+            position: relative;
+        }
+
+        .chart-canvas {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Airport Labels */
+        .airport-label {
+            position: absolute;
+            color: #ecf0f1;
+            font-weight: bold;
+            font-size: 14px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            pointer-events: none;
+            transform: translate(-50%, -50%);
+        }
+
+        /* Legend */
+        .legend {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(52, 73, 94, 0.9);
+            padding: 15px;
+            border-radius: 8px;
+            color: #ecf0f1;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 3px;
+            margin-right: 10px;
+            border-radius: 2px;
+        }
+
+        /* Loading Animation */
+        .loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #ecf0f1;
+            font-size: 18px;
+            text-align: center;
+        }
+
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(255,255,255,0.3);
+            border-top: 4px solid #ecf0f1;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Pulse Animation for Active Routes */
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.6; }
+            100% { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="map-container">
+            <canvas class="map-canvas" id="mapCanvas"></canvas>
+            
+            <!-- Airport Labels -->
+            <div class="airport-label" style="top: 35%; left: 20%;">JFK</div>
+            <div class="airport-label" style="top: 45%; left: 15%;">LAX</div>
+            <div class="airport-label" style="top: 25%; left: 50%;">LHR</div>
+            <div class="airport-label" style="top: 40%; left: 80%;">NRT</div>
+            <div class="airport-label" style="top: 60%; left: 65%;">SYD</div>
+            
+            <div class="legend">
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #2ecc71;"></div>
+                    <span>Profitable Route (>20% margin)</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #f39c12;"></div>
+                    <span>Marginal Route (5-20% margin)</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #e74c3c;"></div>
+                    <span>Unprofitable Route (<5% margin)</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="dashboard">
+            <h2>Flight Operations</h2>
+            
+            <div class="metric-card">
+                <div class="metric-title">Total Revenue</div>
+                <div class="metric-value">$12.4M</div>
+                <div class="metric-change positive">↑ 8.3% vs last month</div>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-title">Active Routes</div>
+                <div class="metric-value">24</div>
+                <div class="metric-change positive">↑ 2 new routes</div>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-title">Fleet Utilization</div>
+                <div class="metric-value">87%</div>
+                <div class="metric-change negative">↓ 3.2% from target</div>
+            </div>
+
+            <div class="route-info">
+                <div class="route-title">JFK → LHR</div>
+                <div class="route-detail">
+                    <span>Daily Flights:</span>
+                    <span>6</span>
+                </div>
+                <div class="route-detail">
+                    <span>Load Factor:</span>
+                    <span>92%</span>
+                </div>
+                <div class="route-detail">
+                    <span>Profit Margin:</span>
+                    <span style="color: #2ecc71;">24%</span>
+                </div>
+            </div>
+
+            <div class="demand-chart">
+                <div class="metric-title">Demand Forecast (7 days)</div>
+                <canvas class="chart-canvas" id="demandChart"></canvas>
+            </div>
+
+            <div class="demand-chart">
+                <div class="metric-title">Route Profitability</div>
+                <canvas class="chart-canvas" id="profitChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Map Canvas Setup
+        const mapCanvas = document.getElementById('mapCanvas');
+        const ctx = mapCanvas.getContext('2d');
+        
+        // Demand Chart Setup
+        const demandCanvas = document.getElementById('demandChart');
+        const demandCtx = demandCanvas.getContext('2d');
+        
+        // Profit Chart Setup
+        const profitCanvas = document.getElementById('profitChart');
+        const profitCtx = profitCanvas.getContext('2d');
+
+        // Resize canvases
+        function resizeCanvas() {
+            mapCanvas.width = mapCanvas.offsetWidth;
+            mapCanvas.height = mapCanvas.offsetHeight;
+            
+            demandCanvas.width = demandCanvas.offsetWidth;
+            demandCanvas.height = demandCanvas.offsetHeight - 30;
+            
+            profitCanvas.width = profitCanvas.offsetWidth;
+            profitCanvas.height = profitCanvas.offsetHeight - 30;
+        }
+        
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        // Airport positions (normalized 0-1)
+        const airports = {
+            JFK: { x: 0.2, y: 0.35, name: 'New York' },
+            LAX: { x: 0.15, y: 0.45, name: 'Los Angeles' },
+            LHR: { x: 0.5, y: 0.25, name: 'London' },
+            NRT: { x: 0.8, y: 0.4, name: 'Tokyo' },
+            SYD: { x: 0.65, y: 0.6, name: 'Sydney' }
+        };
+
+        // Routes with profitability
+        const routes = [
+            { from: 'JFK', to: 'LHR', profit: 24, flights: [] },
+            { from: 'JFK', to: 'LAX', profit: 18, flights: [] },
+            { from: 'LHR', to: 'NRT', profit: 15, flights: [] },
+            { from: 'LAX', to: 'NRT', profit: 22, flights: [] },
+            { from: 'NRT', to: 'SYD', profit: 8, flights: [] },
+            { from: 'LHR', to: 'SYD', profit: -2, flights: [] }
+        ];
+
+        // Plane class
+        class Plane {
+            constructor(route, progress = 0) {
+                this.route = route;
+                this.progress = progress;
+                this.speed = 0.003 + Math.random() * 0.002; // Variable speed
+            }
+
+            update() {
+                this.progress += this.speed;
+                if (this.progress > 1) {
+                    this.progress = 0;
+                }
+            }
+
+            getPosition() {
+                const from = airports[this.route.from];
+                const to = airports[this.route.to];
+                
+                // Bezier curve for more realistic flight path
+                const midX = (from.x + to.x) / 2;
+                const midY = (from.y + to.y) / 2 - 0.1; // Arc upward
+                
+                const t = this.progress;
+                const x = (1-t)*(1-t)*from.x + 2*(1-t)*t*midX + t*t*to.x;
+                const y = (1-t)*(1-t)*from.y + 2*(1-t)*t*midY + t*t*to.y;
+                
+                return { x: x * mapCanvas.width, y: y * mapCanvas.height };
+            }
+        }
+
+        // Initialize planes on routes
+        routes.forEach(route => {
+            const planeCount = Math.floor(route.profit / 10) + 1;
+            for (let i = 0; i < planeCount; i++) {
+                route.flights.push(new Plane(route, i / planeCount));
+            }
+        });
+
+        // Draw functions
+        function drawAirport(code) {
+            const airport = airports[code];
+            const x = airport.x * mapCanvas.width;
+            const y = airport.y * mapCanvas.height;
+            
+            // Airport circle
+            ctx.beginPath();
+            ctx.arc(x, y, 8, 0, Math.PI * 2);
+            ctx.fillStyle = '#ecf0f1';
+            ctx.fill();
+            ctx.strokeStyle = '#34495e';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            // Inner dot
+            ctx.beginPath();
+            ctx.arc(x, y, 3, 0, Math.PI * 2);
+            ctx.fillStyle = '#34495e';
+            ctx.fill();
+        }
+
+        function getRouteColor(profit) {
+            if (profit > 20) return '#2ecc71';
+            if (profit > 5) return '#f39c12';
+            return '#e74c3c';
+        }
+
+        function drawRoute(route) {
+            const from = airports[route.from];
+            const to = airports[route.to];
+            const fromX = from.x * mapCanvas.width;
+            const fromY = from.y * mapCanvas.height;
+            const toX = to.x * mapCanvas.width;
+            const toY = to.y * mapCanvas.height;
+            
+            // Control point for quadratic curve
+            const midX = (fromX + toX) / 2;
+            const midY = (fromY + toY) / 2 - 100;
+            
+            // Route line
+            ctx.beginPath();
+            ctx.moveTo(fromX, fromY);
+            ctx.quadraticCurveTo(midX, midY, toX, toY);
+            ctx.strokeStyle = getRouteColor(route.profit);
+            ctx.lineWidth = 3;
+            ctx.globalAlpha = 0.7;
+            ctx.stroke();
+            ctx.globalAlpha = 1;
+            
+            // Route direction indicator
+            const t = 0.5;
+            const arrowX = (1-t)*(1-t)*fromX + 2*(1-t)*t*midX + t*t*toX;
+            const arrowY = (1-t)*(1-t)*fromY + 2*(1-t)*t*midY + t*t*toY;
+            
+            ctx.save();
+            ctx.translate(arrowX, arrowY);
+            const angle = Math.atan2(toY - fromY, toX - fromX);
+            ctx.rotate(angle);
+            
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.lineTo(-8, -4);
+            ctx.lineTo(-8, 4);
+            ctx.closePath();
+            ctx.fillStyle = getRouteColor(route.profit);
+            ctx.fill();
+            ctx.restore();
+        }
+
+        function drawPlane(plane) {
+            const pos = plane.getPosition();
+            
+            // Plane shadow
+            ctx.beginPath();
+            ctx.arc(pos.x + 2, pos.y + 2, 6, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(0,0,0,0.2)';
+            ctx.fill();
+            
+            // Plane body
+            ctx.beginPath();
+            ctx.arc(pos.x, pos.y, 5, 0, Math.PI * 2);
+            ctx.fillStyle = '#ecf0f1';
+            ctx.fill();
+            
+            // Direction indicator
+            const from = airports[plane.route.from];
+            const to = airports[plane.route.to];
+            const angle = Math.atan2(
+                to.y * mapCanvas.height - from.y * mapCanvas.height,
+                to.x * mapCanvas.width - from.x * mapCanvas.width
+            );
+            
+            ctx.save();
+            ctx.translate(pos.x, pos.y);
+            ctx.rotate(angle);
+            ctx.beginPath();
+            ctx.moveTo(5, 0);
+            ctx.lineTo(0, -3);
+            ctx.lineTo(0, 3);
+            ctx.closePath();
+            ctx.fillStyle = '#3498db';
+            ctx.fill();
+            ctx.restore();
+        }
+
+        // Demand chart data
+        const demandData = [85, 92, 88, 95, 110, 125, 115];
+        const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
+        function drawDemandChart() {
+            demandCtx.clearRect(0, 0, demandCanvas.width, demandCanvas.height);
+            
+            const padding = 10;
+            const chartWidth = demandCanvas.width - padding * 2;
+            const chartHeight = demandCanvas.height - padding * 2;
+            const barWidth = chartWidth / demandData.length;
+            
+            // Draw bars
+            demandData.forEach((value, index) => {
+                const barHeight = (value / 150) * chartHeight;
+                const x = padding + index * barWidth + barWidth * 0.2;
+                const y = chartHeight - barHeight + padding;
+                
+                // Bar
+                demandCtx.fillStyle = value > 100 ? '#2ecc71' : '#3498db';
+                demandCtx.fillRect(x, y, barWidth * 0.6, barHeight);
+                
+                // Value label
+                demandCtx.fillStyle = '#ecf0f1';
+                demandCtx.font = '12px Arial';
+                demandCtx.textAlign = 'center';
+                demandCtx.fillText(value + '%', x + barWidth * 0.3, y - 5);
+                
+                // Day label
+                demandCtx.fillText(days[index], x + barWidth * 0.3, chartHeight + padding - 2);
+            });
+        }
+
+        // Profit chart data
+        const profitData = [
+            { route: 'JFK-LHR', value: 24 },
+            { route: 'LAX-NRT', value: 22 },
+            { route: 'JFK-LAX', value: 18 },
+            { route: 'LHR-NRT', value: 15 },
+            { route: 'NRT-SYD', value: 8 }
+        ];
+
+        function drawProfitChart() {
+            profitCtx.clearRect(0, 0, profitCanvas.width, profitCanvas.height);
+            
+            const padding = 10;
+            const chartWidth = profitCanvas.width - padding * 2 - 60;
+            const chartHeight = profitCanvas.height - padding * 2;
+            const barHeight = chartHeight / profitData.length;
+            
+            profitData.forEach((item, index) => {
+                const barWidth = (item.value / 30) * chartWidth;
+                const x = padding + 60;
+                const y = padding + index * barHeight + barHeight * 0.2;
+                
+                // Background
+                profitCtx.fillStyle = 'rgba(255,255,255,0.1)';
+                profitCtx.fillRect(x, y, chartWidth, barHeight * 0.6);
+                
+                // Bar
+                profitCtx.fillStyle = getRouteColor(item.value);
+                profitCtx.fillRect(x, y, barWidth, barHeight * 0.6);
+                
+                // Route label
+                profitCtx.fillStyle = '#ecf0f1';
+                profitCtx.font = '12px Arial';
+                profitCtx.textAlign = 'right';
+                profitCtx.fillText(item.route, x - 5, y + barHeight * 0.35);
+                
+                // Value label
+                profitCtx.textAlign = 'left';
+                profitCtx.fillText(item.value + '%', x + barWidth + 5, y + barHeight * 0.35);
+            });
+        }
+
+        // Animation loop
+        function animate() {
+            // Clear map
+            ctx.clearRect(0, 0, mapCanvas.width, mapCanvas.height);
+            
+            // Draw water effect
+            const time = Date.now() * 0.0001;
+            for (let i = 0; i < 3; i++) {
+                ctx.beginPath();
+                ctx.arc(
+                    mapCanvas.width * 0.7,
+                    mapCanvas.height * 0.7,
+                    100 + i * 50,
+                    0,
+                    Math.PI * 2
+                );
+                ctx.strokeStyle = `rgba(255,255,255,${0.05 - i * 0.01})`;
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            }
+            
+            // Draw routes
+            routes.forEach(route => drawRoute(route));
+            
+            // Draw airports
+            Object.keys(airports).forEach(code => drawAirport(code));
+            
+            // Update and draw planes
+            routes.forEach(route => {
+                route.flights.forEach(plane => {
+                    plane.update();
+                    drawPlane(plane);
+                });
+            });
+            
+            requestAnimationFrame(animate);
+        }
+
+        // Update dashboard periodically
+        setInterval(() => {
+            // Update metrics with random variations
+            const revenueEl = document.querySelector('.metric-value');
+            const currentRevenue = parseFloat(revenueEl.textContent.replace('$', '').replace('M', ''));
+            const newRevenue = (currentRevenue + (Math.random() - 0.5) * 0.1).toFixed(1);
+            revenueEl.textContent = `$${newRevenue}M`;
+            
+            // Redraw charts
+            drawDemandChart();
+            drawProfitChart();
+        }, 5000);
+
+        // Start animation
+        animate();
+        drawDemandChart();
+        drawProfitChart();
+    </script>
+</body>
+</html>

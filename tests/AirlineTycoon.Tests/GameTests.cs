@@ -1,3 +1,5 @@
+using Xunit;
+
 namespace AirlineTycoon.Tests;
 
 public class GameTests
