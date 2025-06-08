@@ -1,0 +1,8 @@
+#nullable enable
+AirlineTycoon.Game
+AirlineTycoon.Game.Game() -> void
+AirlineTycoon.Game.IsRunning.get -> bool
+AirlineTycoon.Game.Start() -> void
+AirlineTycoon.Game.Stop() -> void
+static AirlineTycoon.Game.Name.get -> string!
+static AirlineTycoon.Game.Version.get -> string!

@@ -1,0 +1,34 @@
+{
+    "recommendations": [
+        // C# Development
+        "ms-dotnettools.csharp",
+        "ms-dotnettools.vscode-dotnet-runtime",
+        
+        // Code formatting
+        "csharpier.csharpier-vscode",
+        
+        // Testing
+        "formulahendry.dotnet-test-explorer",
+        "hbenl.vscode-test-explorer",
+        
+        // Code coverage
+        "ryanluker.vscode-coverage-gutters",
+        
+        // XML/Project files
+        "dotjoshjohnson.xml",
+        
+        // Git
+        "eamodio.gitlens",
+        "donjayamanne.githistory",
+        
+        // General productivity
+        "streetsidesoftware.code-spell-checker",
+        "editorconfig.editorconfig",
+        "usernamehw.errorlens",
+        "gruntfuggly.todo-tree",
+        
+        // Documentation
+        "yzhang.markdown-all-in-one",
+        "davidanson.vscode-markdownlint"
+    ]
+}
