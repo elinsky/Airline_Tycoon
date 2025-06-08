@@ -15,6 +15,6 @@
     <Using Include="Xunit" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\src\AirlineTycoon\AirlineTycoon.csproj" />
+    <ProjectReference Include="../../src/AirlineTycoon/AirlineTycoon.csproj" />
   </ItemGroup>
 </Project>
