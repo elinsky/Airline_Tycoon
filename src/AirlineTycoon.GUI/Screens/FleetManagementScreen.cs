@@ -185,7 +185,7 @@ public class FleetManagementScreen : Screen
                 AirlineTycoonGame.TextRenderer.DrawText(
                     spriteBatch,
                     aircraft.Type.Name,
-                    new Vector2(infoX, infoY + 15),
+                    new Vector2(infoX, infoY + 20),
                     RetroColorPalette.TextSecondary
                 );
 
@@ -193,13 +193,13 @@ public class FleetManagementScreen : Screen
                 AirlineTycoonGame.TextRenderer.DrawText(
                     spriteBatch,
                     $"Condition: {aircraft.Condition:P0}",
-                    new Vector2(infoX, infoY + 35),
+                    new Vector2(infoX, infoY + 40),
                     RetroColorPalette.TextSecondary
                 );
             }
 
             // Condition bar (like RCT's ratings)
-            var conditionBounds = new Rectangle(infoX, infoY + 55, 230, 15);
+            var conditionBounds = new Rectangle(infoX, infoY + 60, 230, 15);
             this.DrawFilledRectangle(spriteBatch, conditionBounds, Color.DarkGray);
 
             // Fill based on condition (green = good, yellow = medium, red = poor)
@@ -208,14 +208,14 @@ public class FleetManagementScreen : Screen
                                   aircraft.Condition > 0.4 ? RetroColorPalette.Warning :
                                   RetroColorPalette.Error;
 
-            var conditionFillBounds = new Rectangle(infoX, infoY + 55, conditionFill, 15);
+            var conditionFillBounds = new Rectangle(infoX, infoY + 60, conditionFill, 15);
             this.DrawFilledRectangle(spriteBatch, conditionFillBounds, conditionColor);
             this.Draw3DBorder(spriteBatch, conditionBounds, 1);
 
             // Lease indicator (if leased)
             if (aircraft.IsLeased)
             {
-                var leaseBounds = new Rectangle(infoX, infoY + 80, 230, 20);
+                var leaseBounds = new Rectangle(infoX, infoY + 85, 230, 20);
                 this.DrawFilledRectangle(spriteBatch, leaseBounds, RetroColorPalette.Warning);
 
                 if (AirlineTycoonGame.TextRenderer != null)
@@ -223,7 +223,7 @@ public class FleetManagementScreen : Screen
                     AirlineTycoonGame.TextRenderer.DrawText(
                         spriteBatch,
                         $"LEASED - ${aircraft.MonthlyLeasePayment:N0}/mo",
-                        new Vector2(infoX + 5, infoY + 85),
+                        new Vector2(infoX + 5, infoY + 88),
                         Color.Black
                     );
                 }
@@ -236,7 +236,7 @@ public class FleetManagementScreen : Screen
                     AirlineTycoonGame.TextRenderer.DrawText(
                         spriteBatch,
                         "OWNED",
-                        new Vector2(infoX, infoY + 85),
+                        new Vector2(infoX, infoY + 88),
                         RetroColorPalette.Success
                     );
                 }
