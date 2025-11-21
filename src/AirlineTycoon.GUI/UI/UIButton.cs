@@ -34,6 +34,11 @@ public class UIButton : UIElement
     public bool IsPressed { get; private set; }
 
     /// <summary>
+    /// Stores where the mouse press started (for trackpad-friendly click detection).
+    /// </summary>
+    private Vector2 pressStartPosition;
+
+    /// <summary>
     /// Event fired when the button is clicked.
     /// </summary>
     public event EventHandler? Clicked;
@@ -72,7 +77,12 @@ public class UIButton : UIElement
 
         // Create a 1x1 white texture for drawing rectangles
         // (This is a simplified approach - in production we'd have a texture cache)
-        Texture2D whitePixel = CreateWhitePixelTexture(spriteBatch.GraphicsDevice);
+        if (AirlineTycoonGame.WhitePixel == null)
+        {
+            return;
+        }
+
+        Texture2D whitePixel = AirlineTycoonGame.WhitePixel;
 
         // Draw button background
         spriteBatch.Draw(whitePixel, bounds, backgroundColor);
@@ -101,8 +111,6 @@ public class UIButton : UIElement
             Color textColor = this.IsEnabled ? RetroColorPalette.TextPrimary : RetroColorPalette.TextDisabled;
             AirlineTycoonGame.TextRenderer.DrawCenteredText(spriteBatch, this.Text, bounds, textColor);
         }
-
-        whitePixel.Dispose();
 
         base.Draw(spriteBatch, gameTime);
     }
@@ -143,6 +151,7 @@ public class UIButton : UIElement
         if (button == MouseButton.Left && this.ContainsPoint(position))
         {
             this.IsPressed = true;
+            this.pressStartPosition = position;
             // TODO: Play button press sound effect
             return true;
         }
@@ -164,8 +173,11 @@ public class UIButton : UIElement
         {
             this.IsPressed = false;
 
-            // Fire click event if mouse is still over the button
-            if (this.ContainsPoint(position))
+            // Fire click event if mouse is still over the button OR
+            // if the mouse hasn't drifted too far (trackpad-friendly)
+            // Allow up to 50 pixels of drift for trackpad users
+            float drift = Vector2.Distance(position, this.pressStartPosition);
+            if (this.ContainsPoint(position) || drift < 50f)
             {
                 this.OnClick();
                 // TODO: Play button click sound effect

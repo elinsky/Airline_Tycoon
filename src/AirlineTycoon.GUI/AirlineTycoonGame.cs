@@ -28,6 +28,7 @@ public class AirlineTycoonGame : Microsoft.Xna.Framework.Game
     private SpriteBatch spriteBatch = null!;
     private RenderTarget2D renderTarget = null!;
     private ScreenManager screenManager = null!;
+    private static Texture2D? whitePixel;
 
     // Mouse state tracking for input handling
     private MouseState previousMouseState;
@@ -62,6 +63,12 @@ public class AirlineTycoonGame : Microsoft.Xna.Framework.Game
     public static TextRenderer? TextRenderer { get; private set; }
 
     /// <summary>
+    /// Gets a 1x1 white pixel texture for drawing filled rectangles.
+    /// Static so all screens can reuse it efficiently.
+    /// </summary>
+    public static Texture2D? WhitePixel => whitePixel;
+
+    /// <summary>
     /// Initializes a new instance of the <see cref="AirlineTycoonGame"/> class.
     /// </summary>
     public AirlineTycoonGame()
@@ -70,9 +77,10 @@ public class AirlineTycoonGame : Microsoft.Xna.Framework.Game
         Content.RootDirectory = "Content";
         IsMouseVisible = true;
 
-        // Set window to 2x base resolution by default (feels good on modern displays)
-        this.graphics.PreferredBackBufferWidth = BaseWidth * 2;
-        this.graphics.PreferredBackBufferHeight = BaseHeight * 2;
+        // Set window to base resolution (1280x720)
+        // Using 1x scale initially to avoid any sizing issues
+        this.graphics.PreferredBackBufferWidth = BaseWidth;
+        this.graphics.PreferredBackBufferHeight = BaseHeight;
 
         // Allow window resizing
         Window.AllowUserResizing = true;
@@ -113,6 +121,10 @@ public class AirlineTycoonGame : Microsoft.Xna.Framework.Game
         // Load pixel art font
         var pixelFont = Content.Load<SpriteFont>("PixelFont");
         TextRenderer = new TextRenderer(pixelFont);
+
+        // Create reusable 1x1 white pixel texture for drawing rectangles
+        whitePixel = new Texture2D(GraphicsDevice, 1, 1);
+        whitePixel.SetData(new[] { Color.White });
 
         // Initialize screen manager
         this.screenManager = new ScreenManager();

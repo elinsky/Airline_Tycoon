@@ -44,7 +44,7 @@ public class RouteManagementScreen : Screen
     {
         // Back button (top left)
         this.backButton = new UIButton(
-            "← Back",
+            "< Back",
             new Vector2(20, 50),
             new Vector2(120, 35)
         );

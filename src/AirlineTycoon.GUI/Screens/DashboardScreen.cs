@@ -186,7 +186,18 @@ public class DashboardScreen : Screen
     /// </summary>
     private void OnViewRoutes()
     {
-        this.Controller?.ShowRouteManagement();
+        System.Diagnostics.Debug.WriteLine("OnViewRoutes called");
+        try
+        {
+            this.Controller?.ShowRouteManagement();
+            System.Diagnostics.Debug.WriteLine("ShowRouteManagement completed");
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"ERROR in OnViewRoutes: {ex.Message}");
+            System.Diagnostics.Debug.WriteLine($"Stack trace: {ex.StackTrace}");
+            throw;
+        }
     }
 
     /// <summary>
@@ -218,15 +229,23 @@ public class DashboardScreen : Screen
     /// </summary>
     private void OnAdvanceDay()
     {
-        if (this.Controller != null)
+        try
         {
-            // Process the day and get results
-            var summary = this.Controller.AdvanceDay();
+            if (this.Controller != null)
+            {
+                // Process the day and get results
+                var summary = this.Controller.AdvanceDay();
 
-            // TODO: Show a summary modal or notification with the day's results
-            // For now, just log it
-            System.Diagnostics.Debug.WriteLine($"Day advanced! Passengers: {summary.PassengersCarried}, " +
-                $"Revenue: ${summary.Revenue:N0}, Costs: ${summary.Costs:N0}");
+                // TODO: Show a summary modal or notification with the day's results
+                // For now, just log it
+                System.Diagnostics.Debug.WriteLine($"Day advanced! Passengers: {summary.PassengersCarried}, " +
+                    $"Revenue: ${summary.Revenue:N0}, Costs: ${summary.Costs:N0}");
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"ERROR in OnAdvanceDay: {ex.Message}");
+            System.Diagnostics.Debug.WriteLine($"Stack trace: {ex.StackTrace}");
         }
     }
 }

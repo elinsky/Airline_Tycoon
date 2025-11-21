@@ -84,13 +84,10 @@ public abstract class Screen : UIElement
     /// </summary>
     protected void DrawFilledRectangle(SpriteBatch spriteBatch, Rectangle bounds, Color color)
     {
-        // Create a 1x1 white pixel texture
-        var whitePixel = new Texture2D(spriteBatch.GraphicsDevice, 1, 1);
-        whitePixel.SetData(new[] { Color.White });
-
-        spriteBatch.Draw(whitePixel, bounds, color);
-
-        whitePixel.Dispose();
+        if (AirlineTycoonGame.WhitePixel != null)
+        {
+            spriteBatch.Draw(AirlineTycoonGame.WhitePixel, bounds, color);
+        }
     }
 
     /// <summary>
@@ -169,8 +166,12 @@ public abstract class Screen : UIElement
     /// </summary>
     protected void Draw3DBorder(SpriteBatch spriteBatch, Rectangle bounds, int borderWidth = 2)
     {
-        var whitePixel = new Texture2D(spriteBatch.GraphicsDevice, 1, 1);
-        whitePixel.SetData(new[] { Color.White });
+        if (AirlineTycoonGame.WhitePixel == null)
+        {
+            return;
+        }
+
+        var whitePixel = AirlineTycoonGame.WhitePixel;
 
         // Top border (light)
         spriteBatch.Draw(whitePixel, new Rectangle(bounds.X, bounds.Y, bounds.Width, borderWidth),
@@ -187,7 +188,5 @@ public abstract class Screen : UIElement
         // Right border (dark)
         spriteBatch.Draw(whitePixel, new Rectangle(bounds.Right - borderWidth, bounds.Y, borderWidth, bounds.Height),
             RetroColorPalette.PanelShadow);
-
-        whitePixel.Dispose();
     }
 }

@@ -135,7 +135,12 @@ public class UIPanel : UIElement
             return;
         }
 
-        Texture2D whitePixel = CreateWhitePixelTexture(spriteBatch.GraphicsDevice);
+        if (AirlineTycoonGame.WhitePixel == null)
+        {
+            return;
+        }
+
+        Texture2D whitePixel = AirlineTycoonGame.WhitePixel;
         var bounds = this.Bounds;
         int borderWidth = 2;
 
@@ -186,8 +191,6 @@ public class UIPanel : UIElement
         spriteBatch.Draw(whitePixel, new Rectangle(bounds.X, bounds.Y, borderWidth, bounds.Height), RetroColorPalette.PanelHighlight);
         spriteBatch.Draw(whitePixel, new Rectangle(bounds.X, bounds.Bottom - borderWidth, bounds.Width, borderWidth), RetroColorPalette.PanelShadow);
         spriteBatch.Draw(whitePixel, new Rectangle(bounds.Right - borderWidth, bounds.Y, borderWidth, bounds.Height), RetroColorPalette.PanelShadow);
-
-        whitePixel.Dispose();
 
         // Draw children (buttons, labels, etc. inside the panel)
         base.Draw(spriteBatch, gameTime);

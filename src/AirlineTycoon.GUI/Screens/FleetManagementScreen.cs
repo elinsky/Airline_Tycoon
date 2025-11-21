@@ -44,7 +44,7 @@ public class FleetManagementScreen : Screen
     {
         // Back button
         this.backButton = new UIButton(
-            "← Back",
+            "< Back",
             new Vector2(20, 50),
             new Vector2(120, 35)
         );
@@ -233,7 +233,11 @@ public class FleetManagementScreen : Screen
     /// </summary>
     private void OnBuyAircraft()
     {
-        System.Diagnostics.Debug.WriteLine("Buy aircraft dialog");
+        if (this.Controller != null)
+        {
+            var purchaseScreen = new AircraftPurchaseScreen(this.Controller, isLease: false);
+            this.Controller.ScreenManager.SwitchTo(purchaseScreen);
+        }
     }
 
     /// <summary>
@@ -241,6 +245,10 @@ public class FleetManagementScreen : Screen
     /// </summary>
     private void OnLeaseAircraft()
     {
-        System.Diagnostics.Debug.WriteLine("Lease aircraft dialog");
+        if (this.Controller != null)
+        {
+            var purchaseScreen = new AircraftPurchaseScreen(this.Controller, isLease: true);
+            this.Controller.ScreenManager.SwitchTo(purchaseScreen);
+        }
     }
 }

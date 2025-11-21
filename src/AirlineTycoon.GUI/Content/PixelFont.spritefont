@@ -1,11 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <XnaContent xmlns:Graphics="Microsoft.Xna.Framework.Content.Pipeline.Graphics">
   <Asset Type="Graphics:FontDescription">
-    <FontName>Courier New</FontName>
-    <Size>10</Size>
+    <!-- Use a monospace pixel-perfect font for retro aesthetic -->
+    <!-- Using m5x7 - a true pixel art font that matches RCT's aesthetic -->
+    <!-- Font file is included in Content folder: m5x7.ttf -->
+    <FontName>m5x7.ttf</FontName>
+    <Size>32</Size>
     <Spacing>0</Spacing>
     <UseKerning>false</UseKerning>
-    <Style>Bold</Style>
+    <Style>Regular</Style>
+    <!-- Disable default processor to prevent antialiasing -->
+    <DefaultCharacter>*</DefaultCharacter>
     <CharacterRegions>
       <CharacterRegion>
         <Start>&#32;</Start>

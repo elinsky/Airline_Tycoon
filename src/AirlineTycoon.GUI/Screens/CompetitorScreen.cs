@@ -42,7 +42,7 @@ public class CompetitorScreen : Screen
     private void InitializeUI()
     {
         this.backButton = new UIButton(
-            "← Back",
+            "< Back",
             new Vector2(20, 50),
             new Vector2(120, 35)
         );

@@ -1,5 +1,6 @@
 using AirlineTycoon.GUI.Screens;
 using AirlineTycoon;
+using System.Linq;
 
 namespace AirlineTycoon.GUI;
 
@@ -104,5 +105,84 @@ public class GameController
     {
         var financialScreen = new FinancialReportScreen(this);
         this.screenManager.SwitchTo(financialScreen);
+    }
+
+    /// <summary>
+    /// Purchases an aircraft of the specified type.
+    /// </summary>
+    /// <param name="aircraftType">The type of aircraft to purchase.</param>
+    /// <returns>True if the purchase was successful, false otherwise.</returns>
+    public bool PurchaseAircraft(AirlineTycoon.Domain.AircraftType aircraftType)
+    {
+        try
+        {
+            this.game.PlayerAirline.PurchaseAircraft(aircraftType);
+            return true;
+        }
+        catch (System.InvalidOperationException)
+        {
+            // Not enough cash
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Leases an aircraft of the specified type.
+    /// </summary>
+    /// <param name="aircraftType">The type of aircraft to lease.</param>
+    /// <returns>True if the lease was successful, false otherwise.</returns>
+    public bool LeaseAircraft(AirlineTycoon.Domain.AircraftType aircraftType)
+    {
+        try
+        {
+            this.game.PlayerAirline.LeaseAircraft(aircraftType);
+            return true;
+        }
+        catch (System.InvalidOperationException)
+        {
+            // Some error occurred
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Opens a route between two airports.
+    /// </summary>
+    /// <param name="origin">The origin airport.</param>
+    /// <param name="destination">The destination airport.</param>
+    /// <param name="ticketPrice">The ticket price for the route.</param>
+    /// <returns>True if the route was opened successfully, false otherwise.</returns>
+    public bool OpenRoute(AirlineTycoon.Domain.Airport origin, AirlineTycoon.Domain.Airport destination, decimal ticketPrice)
+    {
+        try
+        {
+            this.game.PlayerAirline.OpenRoute(origin, destination, ticketPrice);
+            return true;
+        }
+        catch (System.Exception)
+        {
+            // Route already exists, invalid airports, etc.
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Closes an existing route.
+    /// </summary>
+    /// <param name="originCode">The origin airport code.</param>
+    /// <param name="destinationCode">The destination airport code.</param>
+    /// <returns>True if the route was closed successfully, false otherwise.</returns>
+    public bool CloseRoute(string originCode, string destinationCode)
+    {
+        var route = this.game.PlayerAirline.Routes
+            .FirstOrDefault(r => r.Origin.Code == originCode && r.Destination.Code == destinationCode);
+
+        if (route != null)
+        {
+            this.game.PlayerAirline.CloseRoute(route);
+            return true;
+        }
+
+        return false;
     }
 }
