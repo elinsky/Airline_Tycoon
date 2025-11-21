@@ -1,6 +1,8 @@
 using AirlineTycoon.GUI.UI;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace AirlineTycoon.GUI.Screens;
 
@@ -99,16 +101,42 @@ public class RouteManagementScreen : Screen
         var headerBounds = new Rectangle(30, 110, 760, 30);
         this.DrawFilledRectangle(spriteBatch, headerBounds, RetroColorPalette.TitleBarBackground);
 
-        // TODO: Draw column header text once we have fonts:
-        // Origin | Destination | Price | Load Factor | Daily Profit | Status
+        if (AirlineTycoonGame.TextRenderer != null)
+        {
+            AirlineTycoonGame.TextRenderer.DrawText(spriteBatch, "Route", new Vector2(55, 117), Color.White);
+            AirlineTycoonGame.TextRenderer.DrawText(spriteBatch, "Price", new Vector2(260, 117), Color.White);
+            AirlineTycoonGame.TextRenderer.DrawText(spriteBatch, "Load", new Vector2(340, 117), Color.White);
+            AirlineTycoonGame.TextRenderer.DrawText(spriteBatch, "Profit/Day", new Vector2(420, 117), Color.White);
+            AirlineTycoonGame.TextRenderer.DrawText(spriteBatch, "Aircraft", new Vector2(560, 117), Color.White);
+            AirlineTycoonGame.TextRenderer.DrawText(spriteBatch, "Status", new Vector2(710, 117), Color.White);
+        }
 
-        // Route rows (placeholder - will be populated from game data)
+        // Get actual routes
+        var routes = this.Controller?.Game.PlayerAirline.Routes.ToList() ?? new List<AirlineTycoon.Domain.Route>();
+
+        if (routes.Count == 0)
+        {
+            // Show "No routes" message
+            if (AirlineTycoonGame.TextRenderer != null)
+            {
+                AirlineTycoonGame.TextRenderer.DrawText(
+                    spriteBatch,
+                    "No routes. Click '+ Open Route' to add your first route.",
+                    new Vector2(40, 160),
+                    RetroColorPalette.TextSecondary
+                );
+            }
+            return;
+        }
+
+        // Route rows
         int rowY = 150;
         int rowHeight = 35;
         int rowSpacing = 40;
 
-        for (int i = 0; i < 10; i++)
+        for (int i = 0; i < routes.Count; i++)
         {
+            var route = routes[i];
             var rowBounds = new Rectangle(30, rowY + (i * rowSpacing), 760, rowHeight);
 
             // Alternate row colors for readability
@@ -119,11 +147,44 @@ public class RouteManagementScreen : Screen
             this.DrawFilledRectangle(spriteBatch, rowBounds, rowColor);
 
             // Profit indicator (left edge - green for profit, red for loss)
-            Color profitColor = i % 3 == 0 ? RetroColorPalette.Error : RetroColorPalette.Success;
+            Color profitColor = route.DailyProfit >= 0 ? RetroColorPalette.Success : RetroColorPalette.Error;
             var profitIndicator = new Rectangle(35, rowY + (i * rowSpacing) + 5, 10, rowHeight - 10);
             this.DrawFilledRectangle(spriteBatch, profitIndicator, profitColor);
 
-            // TODO: Display actual route data once we have text rendering
+            if (AirlineTycoonGame.TextRenderer != null)
+            {
+                int textY = rowY + (i * rowSpacing) + 10;
+
+                // Route name (Origin → Destination)
+                string routeName = $"{route.Origin.Code} -> {route.Destination.Code}";
+                AirlineTycoonGame.TextRenderer.DrawText(spriteBatch, routeName, new Vector2(55, textY), Color.White);
+
+                // Ticket price
+                AirlineTycoonGame.TextRenderer.DrawText(spriteBatch, $"${route.TicketPrice:N0}", new Vector2(260, textY), RetroColorPalette.TextSecondary);
+
+                // Load factor
+                Color loadColor = route.LoadFactor > 0.8 ? RetroColorPalette.Success :
+                                 route.LoadFactor > 0.6 ? RetroColorPalette.Warning :
+                                 RetroColorPalette.Error;
+                AirlineTycoonGame.TextRenderer.DrawText(spriteBatch, $"{route.LoadFactor:P0}", new Vector2(340, textY), loadColor);
+
+                // Daily profit
+                Color profitTextColor = route.DailyProfit >= 0 ? RetroColorPalette.Success : RetroColorPalette.Error;
+                string profitText = route.DailyProfit >= 0 ? $"+${route.DailyProfit:N0}" : $"-${Math.Abs(route.DailyProfit):N0}";
+                AirlineTycoonGame.TextRenderer.DrawText(spriteBatch, profitText, new Vector2(420, textY), profitTextColor);
+
+                // Assigned aircraft
+                string aircraftText = route.AssignedAircraft != null
+                    ? route.AssignedAircraft.RegistrationNumber
+                    : "UNASSIGNED";
+                Color aircraftColor = route.AssignedAircraft != null ? RetroColorPalette.TextSecondary : RetroColorPalette.Warning;
+                AirlineTycoonGame.TextRenderer.DrawText(spriteBatch, aircraftText, new Vector2(560, textY), aircraftColor);
+
+                // Status
+                string statusText = route.IsActive ? "Active" : "Closed";
+                Color statusColor = route.IsActive ? RetroColorPalette.Success : RetroColorPalette.Error;
+                AirlineTycoonGame.TextRenderer.DrawText(spriteBatch, statusText, new Vector2(710, textY), statusColor);
+            }
         }
     }
 
