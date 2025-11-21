@@ -1,5 +1,6 @@
 using AirlineTycoon.GUI.Screens;
 using AirlineTycoon;
+using System;
 using System.Linq;
 
 namespace AirlineTycoon.GUI;
@@ -184,5 +185,72 @@ public class GameController
         }
 
         return false;
+    }
+
+    /// <summary>
+    /// Assigns an aircraft to a route.
+    /// </summary>
+    /// <param name="routeId">The ID of the route.</param>
+    /// <param name="aircraftRegistration">The registration number of the aircraft to assign.</param>
+    /// <returns>True if the assignment was successful, false otherwise.</returns>
+    public bool AssignAircraftToRoute(Guid routeId, string aircraftRegistration)
+    {
+        try
+        {
+            var route = this.game.PlayerAirline.Routes
+                .FirstOrDefault(r => r.Id == routeId);
+
+            var aircraft = this.game.PlayerAirline.Fleet
+                .FirstOrDefault(a => a.RegistrationNumber == aircraftRegistration);
+
+            if (route == null || aircraft == null)
+            {
+                return false;
+            }
+
+            // Check if aircraft is already assigned to another route
+            var existingAssignment = this.game.PlayerAirline.Routes
+                .FirstOrDefault(r => r.AssignedAircraft?.RegistrationNumber == aircraftRegistration);
+
+            if (existingAssignment != null)
+            {
+                // Unassign from existing route first
+                existingAssignment.UnassignAircraft();
+            }
+
+            // Assign to new route
+            route.AssignAircraft(aircraft);
+            return true;
+        }
+        catch (System.Exception)
+        {
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Unassigns an aircraft from a route.
+    /// </summary>
+    /// <param name="routeId">The ID of the route.</param>
+    /// <returns>True if the unassignment was successful, false otherwise.</returns>
+    public bool UnassignAircraftFromRoute(Guid routeId)
+    {
+        try
+        {
+            var route = this.game.PlayerAirline.Routes
+                .FirstOrDefault(r => r.Id == routeId);
+
+            if (route == null)
+            {
+                return false;
+            }
+
+            route.UnassignAircraft();
+            return true;
+        }
+        catch (System.Exception)
+        {
+            return false;
+        }
     }
 }
