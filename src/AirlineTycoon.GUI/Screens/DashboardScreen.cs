@@ -83,7 +83,7 @@ public class DashboardScreen : Screen
 
         // Advance day button (prominent, bottom left)
         this.advanceDayButton = new UIButton(
-            "Advance Day ⏭",
+            "Advance Day >>",
             new Vector2(buttonX, AirlineTycoonGame.BaseHeight - 60),
             new Vector2(buttonWidth, 50)
         );
