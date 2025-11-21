@@ -257,12 +257,13 @@ public class ConsoleUI
         Console.WriteLine("│                                         │");
         Console.WriteLine("│  [1] View Routes                        │");
         Console.WriteLine("│  [2] View Fleet                         │");
-        Console.WriteLine("│  [3] Open New Route                     │");
-        Console.WriteLine("│  [4] Buy/Lease Aircraft                 │");
-        Console.WriteLine("│  [5] View Financial Report              │");
-        Console.WriteLine("│  [6] Advance Day ⏭                      │");
-        Console.WriteLine("│  [7] Save Game                          │");
-        Console.WriteLine("│  [8] Quit                               │");
+        Console.WriteLine("│  [3] View Competitors                   │");
+        Console.WriteLine("│  [4] Open New Route                     │");
+        Console.WriteLine("│  [5] Buy/Lease Aircraft                 │");
+        Console.WriteLine("│  [6] Financial Report                   │");
+        Console.WriteLine("│  [7] Advance Day ⏭                      │");
+        Console.WriteLine("│  [8] Save Game                          │");
+        Console.WriteLine("│  [9] Quit                               │");
         Console.WriteLine("│                                         │");
         Console.WriteLine("└─────────────────────────────────────────┘");
         Console.WriteLine();
@@ -283,21 +284,24 @@ public class ConsoleUI
                 this.ShowFleetScreen();
                 break;
             case "3":
-                this.ShowOpenRouteScreen();
+                this.ShowCompetitorsScreen();
                 break;
             case "4":
-                this.ShowBuyAircraftScreen();
+                this.ShowOpenRouteScreen();
                 break;
             case "5":
-                this.ShowFinancialReport();
+                this.ShowBuyAircraftScreen();
                 break;
             case "6":
-                this.AdvanceDay();
+                this.ShowFinancialReport();
                 break;
             case "7":
-                this.SaveGame();
+                this.AdvanceDay();
                 break;
             case "8":
+                this.SaveGame();
+                break;
+            case "9":
                 this.game.Stop();
                 break;
             default:
@@ -403,6 +407,88 @@ public class ConsoleUI
             {
                 Console.WriteLine($"Total Monthly Lease Cost: ${totalLeaseCost:N0}");
             }
+        }
+
+        Console.WriteLine();
+        Console.WriteLine("Press any key to return...");
+        Console.ReadKey();
+    }
+
+    /// <summary>
+    /// Shows competitor airlines with their stats, routes, and pricing.
+    /// Like viewing competing parks in RCT, helps player understand the competitive landscape.
+    /// </summary>
+    private void ShowCompetitorsScreen()
+    {
+        Console.Clear();
+
+        Console.WriteLine("═══════════════════ COMPETITOR AIRLINES ═══════════════════");
+        Console.WriteLine();
+
+        if (this.game.Competitors.Count == 0)
+        {
+            Console.WriteLine("No competitors in this game.");
+            Console.WriteLine();
+            Console.WriteLine("Press any key to return...");
+            Console.ReadKey();
+            return;
+        }
+
+        foreach (var competitor in this.game.Competitors.OrderByDescending(c => c.Airline.TotalPassengersCarried))
+        {
+            var airline = competitor.Airline;
+            var personality = competitor.Personality;
+
+            // Airline header
+            Console.WriteLine($"┌─── {airline.Name} ───");
+            Console.WriteLine($"│ Personality: {personality.Type}  |  Hub: {airline.HomeHub}");
+            Console.WriteLine($"│ Cash: {FormatCurrency(airline.Cash)}  |  Reputation: {airline.Reputation}/100");
+            Console.WriteLine($"│ Fleet: {airline.Fleet.Count} aircraft  |  Routes: {airline.Routes.Count(r => r.IsActive)}");
+            Console.WriteLine($"│ Total Passengers: {airline.TotalPassengersCarried:N0}");
+            Console.WriteLine($"│ Net Profit: {FormatCurrency(airline.NetProfit)}");
+            Console.WriteLine("│");
+
+            // Show competitor routes
+            if (airline.Routes.Any(r => r.IsActive))
+            {
+                Console.WriteLine("│ Active Routes:");
+                foreach (var route in airline.Routes.Where(r => r.IsActive).OrderByDescending(r => r.DailyProfit).Take(3))
+                {
+                    string loadFactor = route.AssignedAircraft != null ? $"{route.LoadFactor:P0}" : "N/A";
+                    Console.WriteLine($"│   • {route.Name,-12} ${route.TicketPrice,3:N0}  Load: {loadFactor,4}  Profit: {FormatCurrency(route.DailyProfit),13}");
+                }
+
+                if (airline.Routes.Count(r => r.IsActive) > 3)
+                {
+                    Console.WriteLine($"│   ... and {airline.Routes.Count(r => r.IsActive) - 3} more routes");
+                }
+            }
+            else
+            {
+                Console.WriteLine("│ No active routes");
+            }
+
+            Console.WriteLine("└─────────────────────────────────────────────────────────────");
+            Console.WriteLine();
+        }
+
+        // Market comparison
+        Console.WriteLine("═══════════════════ MARKET COMPARISON ═══════════════════");
+        Console.WriteLine();
+        Console.WriteLine("Airline              Passengers    Revenue        Reputation   Routes");
+        Console.WriteLine("────────────────────────────────────────────────────────────────────");
+
+        var playerAirline = this.game.PlayerAirline!;
+        Console.WriteLine(
+            $"★ {playerAirline.Name,-16} {playerAirline.TotalPassengersCarried,10:N0}  {FormatCurrency(playerAirline.TotalRevenue),13}  {playerAirline.Reputation,10}/100  {playerAirline.Routes.Count(r => r.IsActive),6}"
+        );
+
+        foreach (var competitor in this.game.Competitors.OrderByDescending(c => c.Airline.TotalPassengersCarried))
+        {
+            var airline = competitor.Airline;
+            Console.WriteLine(
+                $"  {airline.Name,-16} {airline.TotalPassengersCarried,10:N0}  {FormatCurrency(airline.TotalRevenue),13}  {airline.Reputation,10}/100  {airline.Routes.Count(r => r.IsActive),6}"
+            );
         }
 
         Console.WriteLine();

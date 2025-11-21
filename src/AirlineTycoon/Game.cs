@@ -183,8 +183,8 @@ public class Game
             this.PlayerAirline.ActiveEvents.Add(newEvent);
         }
 
-        // Process the day's operations
-        var summary = this.PlayerAirline.ProcessDay();
+        // Process the day's operations (with competition)
+        var summary = this.PlayerAirline.ProcessDay(this.Competitors);
 
         // Add new event to summary so UI can display it
         if (newEvent != null)
@@ -201,8 +201,8 @@ public class Game
             // AI makes strategic decisions (routes, pricing, aircraft)
             this.airlineAI.ProcessTurn(competitor, allAirlines, this.PlayerAirline.CurrentDay);
 
-            // Process the competitor's daily operations
-            competitor.Airline.ProcessDay();
+            // Process the competitor's daily operations (with competition)
+            competitor.Airline.ProcessDay(this.Competitors);
         }
 
         // Check win/lose conditions

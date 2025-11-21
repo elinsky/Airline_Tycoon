@@ -1,3 +1,4 @@
+using AirlineTycoon.Domain.AI;
 using AirlineTycoon.Domain.Events;
 
 namespace AirlineTycoon.Domain;
@@ -106,6 +107,17 @@ public class Airline
     /// <returns>A summary of the day's operations.</returns>
     public DailyOperationsSummary ProcessDay()
     {
+        return this.ProcessDay(null);
+    }
+
+    /// <summary>
+    /// Advances the game by one day, processing all operations with competition.
+    /// Calculates market share when multiple airlines serve the same routes.
+    /// </summary>
+    /// <param name="competitors">List of competitor airlines for market share calculations.</param>
+    /// <returns>A summary of the day's operations.</returns>
+    public DailyOperationsSummary ProcessDay(List<CompetitorAirline>? competitors)
+    {
         this.CurrentDay++;
 
         // Remove expired events
@@ -118,8 +130,8 @@ public class Airline
         // Process each active route
         foreach (var route in this.Routes.Where(r => r.IsActive && r.AssignedAircraft != null))
         {
-            // Simulate the route's daily operations
-            var routeResult = this.SimulateRouteDay(route);
+            // Simulate the route's daily operations (with competition if applicable)
+            var routeResult = this.SimulateRouteDay(route, competitors);
 
             dailyRevenue += routeResult.Revenue;
             dailyCosts += routeResult.Costs;
@@ -172,7 +184,9 @@ public class Airline
     /// Simulates one day of operations for a specific route.
     /// Calculates revenue, costs, load factor, and passenger count.
     /// </summary>
-    private RouteOperationsResult SimulateRouteDay(Route route)
+    /// <param name="route">The route to simulate.</param>
+    /// <param name="competitors">Optional list of competitors for market share calculations.</param>
+    private RouteOperationsResult SimulateRouteDay(Route route, List<CompetitorAirline>? competitors)
     {
         if (route.AssignedAircraft == null)
         {
@@ -191,6 +205,30 @@ public class Airline
         double eventDemandModifier = this.GetActiveEventDemandModifier();
 
         int adjustedDemand = (int)(basedemand * reputationModifier * eventDemandModifier);
+
+        // Apply market share if there are competitors on this route
+        if (competitors != null && competitors.Any())
+        {
+            var competingAirlines = MarketCompetition.FindCompetingAirlines(
+                route.Origin.Code,
+                route.Destination.Code,
+                this,
+                competitors
+            );
+
+            if (competingAirlines.Count > 1)
+            {
+                // Multiple airlines serve this route - split demand
+                double marketShare = MarketCompetition.CalculateMarketShare(
+                    this,
+                    route,
+                    competingAirlines,
+                    competitors
+                );
+
+                adjustedDemand = (int)(adjustedDemand * marketShare);
+            }
+        }
 
         // Calculate capacity
         int dailyCapacity = aircraft.Type.Capacity * route.DailyFlights;
