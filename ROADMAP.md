@@ -192,32 +192,32 @@ Build the most compelling airline simulation game where every gate, route, and j
   - Displays: Registration, Type, Condition, Lease status
   - Shows "No aircraft" message when fleet is empty
 
-**Phase B: Core Gameplay (IN PROGRESS - CRITICAL FOR PLAYABLE GAME)**
+**Phase B: Core Gameplay (COMPLETE)**
 
-**Priority 1: Aircraft Assignment System (REQUIRED)**
-- [ ] Add `AssignAircraftToRoute()` method to GameController
-- [ ] Add `UnassignAircraftFromRoute()` method to GameController
-- [ ] Create aircraft assignment dialog/dropdown in Route Management screen
-- [ ] Show assigned aircraft in route list
-- [ ] Show assignment status in Fleet Management screen
-- [ ] Enable aircraft reassignment between routes
+**Priority 1: Aircraft Assignment System (COMPLETE)**
+- [x] Add `AssignAircraftToRoute()` method to GameController
+- [x] Add `UnassignAircraftFromRoute()` method to GameController
+- [x] Create aircraft assignment dialog/dropdown in Route Management screen
+- [x] Show assigned aircraft in route list
+- [x] Show assignment status in Fleet Management screen
+- [x] Enable aircraft reassignment between routes
 
-**Priority 2: Route Management System (REQUIRED)**
-- [ ] Display actual routes in RouteManagementScreen
+**Priority 2: Route Management System (COMPLETE)**
+- [x] Display actual routes in RouteManagementScreen
   - Replace placeholder rows with real route data from `PlayerAirline.Routes`
   - Show: Origin, Destination, Distance, Ticket Price, Load Factor
   - Show profitability indicator (green/red)
   - Show assigned aircraft (or "Unassigned")
-- [ ] Implement "Open Route" dialog
+- [x] Implement "Open Route" dialog
   - Airport picker for origin (dropdown from Airport.All)
   - Airport picker for destination (dropdown from Airport.All)
   - Ticket price input field with suggested price
   - "Confirm" button calls GameController.OpenRoute()
-- [ ] Wire up "Close Route" functionality
+- [x] Wire up "Close Route" functionality
   - Add close button to each route row
   - Confirmation dialog
   - Call GameController.CloseRoute()
-- [ ] Add route assignment from Route Management screen
+- [x] Add route assignment from Route Management screen
   - "Assign Aircraft" button for each unassigned route
   - Dropdown showing available (unassigned) aircraft
   - Visual feedback when route becomes operational
@@ -233,38 +233,43 @@ Build the most compelling airline simulation game where every gate, route, and j
   - Scroll or fade animation
   - Color-code by event severity
 
-**Phase C: Enhanced Screens (NICE TO HAVE)**
-- [ ] Competitor screen with real data
+**Phase C: Enhanced Screens (COMPLETE)**
+- [x] Competitor screen with real data
   - Display actual competitors from Game.Competitors
   - Show their fleet size, route count, cash
   - Show overlapping routes (where you compete)
-- [ ] Financial report with real data
+- [x] Financial report with real data
   - Calculate revenue/cost breakdown from PlayerAirline
   - Show expense percentages (fuel, crew, airports, etc.)
   - Display profit trend (need to track historical data)
-- [ ] Aircraft maintenance functionality
+- [x] Aircraft maintenance functionality
   - "Perform Maintenance" button in Fleet Management
   - Show maintenance cost preview
   - Call Aircraft.PerformMaintenance() via GameController
-- [ ] Sell/return aircraft functionality
+- [x] Sell/return aircraft functionality
   - "Sell" button for owned aircraft (get 70% of purchase price)
   - "Return" button for leased aircraft (early termination penalty)
+- [x] Route price adjustment (moved from Phase D)
+  - Edit ticket price for existing routes with +/- buttons
+  - $10 increment/decrement
+  - Minimum price of $10
 
 **Phase D: Polish (DEFERRED)**
 - [ ] Save/load integration
   - Keep existing JSON save system
   - Add "Load Game" screen with save previews
   - Auto-save option
-- [ ] Route price adjustment
-  - Edit ticket price for existing routes
-  - Show demand response preview
 - [ ] Route frequency adjustment
   - Change daily flights per route
   - Affects revenue and costs
 
-**Current Status:** Foundation complete (Phase A). Game engine is fully functional - time advances, revenue calculates, AI competes, events occur. **CRITICAL GAP:** Players cannot assign aircraft to routes or open new routes, making the game unplayable beyond the initial setup. Phase B is essential to complete the core game loop.
+**Current Status:** Phase 2.5.5 Game Integration is substantially complete:
+- ✅ **Phase A (Foundation)**: Complete - Screen management, data binding, basic UI
+- ✅ **Phase B (Core Gameplay)**: Complete - Aircraft assignment, route management, fully playable game loop
+- ✅ **Phase C (Enhanced Screens)**: Complete - Competitor analysis, financial reports, aircraft lifecycle management, price adjustment
+- ⏸️ **Phase D (Polish)**: Deferred - Save/load and route frequency features postponed
 
-**Why Phase B is Critical:** Without aircraft assignment, purchased planes sit idle. Without route opening, players cannot expand. These are the "steering wheel" of the game - the engine runs but you can't drive it.
+**The game is now fully playable!** Players can purchase/lease aircraft, open routes, assign planes, adjust pricing, perform maintenance, and sell/return aircraft. The core game loop is complete and functional.
 
 ### Implementation Approach
 
