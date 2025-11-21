@@ -25,6 +25,7 @@ public class FleetManagementScreen : Screen
     private UIButton? backButton;
     private UIButton? buyAircraftButton;
     private UIButton? leaseAircraftButton;
+    private List<UIButton> maintenanceButtons = new();
 
     /// <inheritdoc/>
     public override string Title => "Fleet Management";
@@ -70,6 +71,18 @@ public class FleetManagementScreen : Screen
         );
         this.leaseAircraftButton.Clicked += (s, e) => this.OnLeaseAircraft();
         this.AddChild(this.leaseAircraftButton);
+    }
+
+    /// <inheritdoc/>
+    public override void Update(GameTime gameTime)
+    {
+        if (this.IsVisible)
+        {
+            // Rebuild maintenance buttons if fleet changes
+            this.RebuildMaintenanceButtons();
+        }
+
+        base.Update(gameTime);
     }
 
     /// <inheritdoc/>
@@ -321,6 +334,97 @@ public class FleetManagementScreen : Screen
         {
             var purchaseScreen = new AircraftPurchaseScreen(this.Controller, isLease: true);
             this.Controller.ScreenManager.SwitchTo(purchaseScreen);
+        }
+    }
+
+    /// <summary>
+    /// Rebuilds the maintenance buttons for each aircraft in the fleet.
+    /// Called during Update to keep buttons in sync with fleet.
+    /// </summary>
+    private void RebuildMaintenanceButtons()
+    {
+        var fleet = this.Controller?.Game.PlayerAirline.Fleet.ToList() ?? new List<AirlineTycoon.Domain.Aircraft>();
+
+        // If fleet count matches button count, no rebuild needed
+        if (fleet.Count == this.maintenanceButtons.Count)
+        {
+            return;
+        }
+
+        // Remove existing maintenance buttons
+        foreach (var button in this.maintenanceButtons)
+        {
+            this.RemoveChild(button);
+        }
+
+        this.maintenanceButtons.Clear();
+
+        // Create new maintenance buttons for each aircraft
+        int cardWidth = 360;
+        int cardHeight = 120;
+        int cardSpacing = 20;
+        int startX = 40;
+        int startY = 160;
+        int cardsPerRow = 2;
+
+        for (int i = 0; i < fleet.Count; i++)
+        {
+            var aircraft = fleet[i];
+            int row = i / cardsPerRow;
+            int col = i % cardsPerRow;
+            int x = startX + (col * (cardWidth + cardSpacing));
+            int y = startY + (row * (cardHeight + cardSpacing));
+
+            // Calculate maintenance cost
+            decimal maintenanceCost = this.Controller?.CalculateMaintenanceCost(aircraft.RegistrationNumber) ?? 0;
+
+            // Create maintenance button (bottom right of card)
+            var maintenanceButton = new UIButton(
+                $"Maintain (${maintenanceCost:N0})",
+                new Vector2(x + cardWidth - 150, y + cardHeight - 35),
+                new Vector2(140, 30)
+            );
+
+            // Disable button if aircraft is already in perfect condition or insufficient funds
+            bool canAfford = this.Controller?.Game.PlayerAirline.Cash >= maintenanceCost;
+            bool needsMaintenance = aircraft.Condition < 1.0;
+
+            if (!needsMaintenance || !canAfford)
+            {
+                maintenanceButton.IsEnabled = false;
+            }
+
+            // Store aircraft registration in button tag for event handler
+            string registration = aircraft.RegistrationNumber;
+            maintenanceButton.Clicked += (s, e) => this.OnPerformMaintenance(registration);
+
+            this.maintenanceButtons.Add(maintenanceButton);
+            this.AddChild(maintenanceButton);
+        }
+    }
+
+    /// <summary>
+    /// Handles the maintenance button click for a specific aircraft.
+    /// </summary>
+    /// <param name="aircraftRegistration">The registration number of the aircraft to maintain.</param>
+    private void OnPerformMaintenance(string aircraftRegistration)
+    {
+        if (this.Controller == null)
+        {
+            return;
+        }
+
+        bool success = this.Controller.PerformAircraftMaintenance(aircraftRegistration);
+
+        if (success)
+        {
+            System.Diagnostics.Debug.WriteLine($"Maintenance performed on {aircraftRegistration}");
+            // Force button rebuild to update button states and costs
+            this.maintenanceButtons.Clear();
+        }
+        else
+        {
+            System.Diagnostics.Debug.WriteLine($"Maintenance failed for {aircraftRegistration} - insufficient funds or aircraft not found");
         }
     }
 }

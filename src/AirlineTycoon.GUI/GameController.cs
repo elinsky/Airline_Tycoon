@@ -268,4 +268,67 @@ public class GameController
             return false;
         }
     }
+
+    /// <summary>
+    /// Performs maintenance on an aircraft.
+    /// </summary>
+    /// <param name="aircraftRegistration">The registration number of the aircraft.</param>
+    /// <param name="maintenanceLevel">The level of maintenance (0.0 = basic, 1.0 = complete overhaul).</param>
+    /// <returns>True if maintenance was successful, false otherwise (e.g., insufficient funds).</returns>
+    public bool PerformAircraftMaintenance(string aircraftRegistration, double maintenanceLevel = 1.0)
+    {
+        try
+        {
+            var aircraft = this.game.PlayerAirline.Fleet
+                .FirstOrDefault(a => a.RegistrationNumber == aircraftRegistration);
+
+            if (aircraft == null)
+            {
+                return false;
+            }
+
+            // Calculate maintenance cost first without performing maintenance
+            decimal maintenanceCost = this.CalculateMaintenanceCost(aircraftRegistration, maintenanceLevel);
+
+            // Check if airline has enough cash
+            if (this.game.PlayerAirline.Cash < maintenanceCost)
+            {
+                return false;
+            }
+
+            // Perform maintenance (modifies aircraft condition)
+            aircraft.PerformMaintenance(maintenanceLevel);
+
+            // Deduct cost from airline cash
+            this.game.PlayerAirline.Cash -= maintenanceCost;
+
+            return true;
+        }
+        catch (System.Exception)
+        {
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Calculates the maintenance cost for an aircraft without performing the maintenance.
+    /// </summary>
+    /// <param name="aircraftRegistration">The registration number of the aircraft.</param>
+    /// <param name="maintenanceLevel">The level of maintenance (0.0 = basic, 1.0 = complete overhaul).</param>
+    /// <returns>The maintenance cost, or 0 if aircraft not found.</returns>
+    public decimal CalculateMaintenanceCost(string aircraftRegistration, double maintenanceLevel = 1.0)
+    {
+        var aircraft = this.game.PlayerAirline.Fleet
+            .FirstOrDefault(a => a.RegistrationNumber == aircraftRegistration);
+
+        if (aircraft == null)
+        {
+            return 0m;
+        }
+
+        // Calculate cost without performing maintenance
+        // Base cost is ~2% of aircraft value, scaled by maintenance level
+        decimal baseCost = aircraft.Type.PurchasePrice * 0.02m;
+        return baseCost * (decimal)maintenanceLevel;
+    }
 }
