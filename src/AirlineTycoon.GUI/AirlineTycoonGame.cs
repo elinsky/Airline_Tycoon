@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework.Input;
 using AirlineTycoon.GUI.Screens;
 using AirlineTycoon.GUI.UI;
 using AirlineTycoon.GUI.Rendering;
+using AirlineTycoon.GUI.Audio;
 
 namespace AirlineTycoon.GUI;
 
@@ -61,6 +62,18 @@ public class AirlineTycoonGame : Microsoft.Xna.Framework.Game
     /// Static so all screens can access it easily.
     /// </summary>
     public static TextRenderer? TextRenderer { get; private set; }
+
+    /// <summary>
+    /// Gets the audio manager for playing sound effects and music.
+    /// Static so all screens and UI elements can access it easily.
+    /// </summary>
+    public static AudioManager? AudioManager { get; private set; }
+
+    /// <summary>
+    /// Gets the sprite manager for aircraft and airport sprites.
+    /// Static so all screens can access sprites easily.
+    /// </summary>
+    public static SpriteManager? SpriteManager { get; private set; }
 
     /// <summary>
     /// Gets a 1x1 white pixel texture for drawing filled rectangles.
@@ -122,6 +135,14 @@ public class AirlineTycoonGame : Microsoft.Xna.Framework.Game
         var pixelFont = Content.Load<SpriteFont>("PixelFont");
         TextRenderer = new TextRenderer(pixelFont);
 
+        // Initialize audio manager and load procedurally generated sounds
+        AudioManager = new AudioManager();
+        this.LoadProceduralSounds();
+
+        // Initialize sprite manager and generate procedural sprites
+        SpriteManager = new SpriteManager(GraphicsDevice);
+        this.GenerateProceduralSprites();
+
         // Create reusable 1x1 white pixel texture for drawing rectangles
         whitePixel = new Texture2D(GraphicsDevice, 1, 1);
         whitePixel.SetData(new[] { Color.White });
@@ -132,6 +153,65 @@ public class AirlineTycoonGame : Microsoft.Xna.Framework.Game
         // Create game controller and start new game
         var controller = new GameController(this.screenManager);
         controller.StartNewGame();  // This will initialize the game and navigate to dashboard
+    }
+
+    /// <summary>
+    /// Loads procedurally generated sound effects.
+    /// These are simple beep/tone sounds created mathematically,
+    /// perfect for retro-style feedback without needing audio files.
+    /// </summary>
+    private void LoadProceduralSounds()
+    {
+        if (AudioManager == null)
+        {
+            return;
+        }
+
+        // Generate and load all game sounds
+        AudioManager.LoadProceduralSound("button_click", SoundGenerator.GenerateClick());
+        AudioManager.LoadProceduralSound("success", SoundGenerator.GenerateSuccess());
+        AudioManager.LoadProceduralSound("error", SoundGenerator.GenerateError());
+        AudioManager.LoadProceduralSound("alert", SoundGenerator.GenerateAlert());
+        AudioManager.LoadProceduralSound("purchase", SoundGenerator.GeneratePurchase());
+        AudioManager.LoadProceduralSound("day_advance", SoundGenerator.GenerateDayAdvance());
+
+        System.Diagnostics.Debug.WriteLine("All procedural sounds loaded successfully");
+
+        // Generate and load background music
+        var airlineTheme = MusicGenerator.GenerateAirlineTheme(30f, 0.25f);
+        AudioManager.LoadMusic(airlineTheme);
+
+        // Start playing background music
+        AudioManager.PlayMusic();
+
+        System.Diagnostics.Debug.WriteLine("Background music generated and started");
+    }
+
+    /// <summary>
+    /// Generates procedurally created sprites for aircraft and airports.
+    /// These are simple pixel art sprites created mathematically,
+    /// perfect for retro-style visuals without needing graphic assets.
+    /// </summary>
+    private void GenerateProceduralSprites()
+    {
+        if (SpriteManager == null)
+        {
+            return;
+        }
+
+        // Generate all aircraft sprites
+        SpriteManager.GenerateAircraftSprites();
+
+        // Generate all airport icon sprites
+        SpriteManager.GenerateAirportSprites();
+
+        // Generate UI element sprites (9-slice panels, etc.)
+        SpriteManager.GenerateUISprites();
+
+        // Generate US map visualization
+        SpriteManager.GenerateUSMapSprite(800, 500);
+
+        System.Diagnostics.Debug.WriteLine("All procedural sprites generated successfully");
     }
 
     /// <summary>

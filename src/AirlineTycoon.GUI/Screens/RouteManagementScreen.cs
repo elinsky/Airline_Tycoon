@@ -27,6 +27,7 @@ public class RouteManagementScreen : Screen
     private UIButton? openRouteButton;
     private List<UIButton> assignButtons = new();
     private List<UIButton> priceButtons = new();
+    private List<UIButton> frequencyButtons = new();
     private bool needsButtonRebuild = true;
 
     /// <inheritdoc/>
@@ -100,6 +101,12 @@ public class RouteManagementScreen : Screen
         }
         this.priceButtons.Clear();
 
+        foreach (var btn in this.frequencyButtons)
+        {
+            this.RemoveChild(btn);
+        }
+        this.frequencyButtons.Clear();
+
         if (routes.Count == 0)
         {
             return;
@@ -135,6 +142,28 @@ public class RouteManagementScreen : Screen
             this.AddChild(increasePriceButton);
             this.priceButtons.Add(increasePriceButton);
 
+            // Add frequency decrease button (-)
+            var decreaseFrequencyButton = new UIButton(
+                "-",
+                new Vector2(375, rowY + (i * rowSpacing) + 5),
+                new Vector2(20, 25)
+            );
+            var capturedRouteFreqDecrease = route;
+            decreaseFrequencyButton.Clicked += (s, e) => this.OnDecreaseFrequency(capturedRouteFreqDecrease);
+            this.AddChild(decreaseFrequencyButton);
+            this.frequencyButtons.Add(decreaseFrequencyButton);
+
+            // Add frequency increase button (+)
+            var increaseFrequencyButton = new UIButton(
+                "+",
+                new Vector2(400, rowY + (i * rowSpacing) + 5),
+                new Vector2(20, 25)
+            );
+            var capturedRouteFreqIncrease = route;
+            increaseFrequencyButton.Clicked += (s, e) => this.OnIncreaseFrequency(capturedRouteFreqIncrease);
+            this.AddChild(increaseFrequencyButton);
+            this.frequencyButtons.Add(increaseFrequencyButton);
+
             // Add assign/unassign button
             if (route.AssignedAircraft == null)
             {
@@ -147,7 +176,7 @@ public class RouteManagementScreen : Screen
                 {
                     var assignButton = new UIButton(
                         "Assign",
-                        new Vector2(640, rowY + (i * rowSpacing) + 5),
+                        new Vector2(675, rowY + (i * rowSpacing) + 5),
                         new Vector2(60, 25)
                     );
 
@@ -165,7 +194,7 @@ public class RouteManagementScreen : Screen
                 // Unassign button
                 var unassignButton = new UIButton(
                     "X",
-                    new Vector2(640, rowY + (i * rowSpacing) + 5),
+                    new Vector2(675, rowY + (i * rowSpacing) + 5),
                     new Vector2(25, 25)
                 );
 
@@ -231,9 +260,10 @@ public class RouteManagementScreen : Screen
         {
             AirlineTycoonGame.TextRenderer.DrawText(spriteBatch, "Route", new Vector2(55, 117), Color.White);
             AirlineTycoonGame.TextRenderer.DrawText(spriteBatch, "Price", new Vector2(260, 117), Color.White);
-            AirlineTycoonGame.TextRenderer.DrawText(spriteBatch, "Load", new Vector2(340, 117), Color.White);
-            AirlineTycoonGame.TextRenderer.DrawText(spriteBatch, "Profit/Day", new Vector2(420, 117), Color.White);
-            AirlineTycoonGame.TextRenderer.DrawText(spriteBatch, "Aircraft", new Vector2(560, 117), Color.White);
+            AirlineTycoonGame.TextRenderer.DrawText(spriteBatch, "Freq", new Vector2(360, 117), Color.White);
+            AirlineTycoonGame.TextRenderer.DrawText(spriteBatch, "Load", new Vector2(430, 117), Color.White);
+            AirlineTycoonGame.TextRenderer.DrawText(spriteBatch, "Profit/Day", new Vector2(490, 117), Color.White);
+            AirlineTycoonGame.TextRenderer.DrawText(spriteBatch, "Aircraft", new Vector2(600, 117), Color.White);
             AirlineTycoonGame.TextRenderer.DrawText(spriteBatch, "Status", new Vector2(710, 117), Color.White);
         }
 
@@ -288,23 +318,26 @@ public class RouteManagementScreen : Screen
                 // Ticket price
                 AirlineTycoonGame.TextRenderer.DrawText(spriteBatch, $"${route.TicketPrice:N0}", new Vector2(260, textY), RetroColorPalette.TextSecondary);
 
+                // Frequency (daily flights)
+                AirlineTycoonGame.TextRenderer.DrawText(spriteBatch, $"{route.DailyFlights}x", new Vector2(360, textY), Color.White);
+
                 // Load factor
                 Color loadColor = route.LoadFactor > 0.8 ? RetroColorPalette.Success :
                                  route.LoadFactor > 0.6 ? RetroColorPalette.Warning :
                                  RetroColorPalette.Error;
-                AirlineTycoonGame.TextRenderer.DrawText(spriteBatch, $"{route.LoadFactor:P0}", new Vector2(340, textY), loadColor);
+                AirlineTycoonGame.TextRenderer.DrawText(spriteBatch, $"{route.LoadFactor:P0}", new Vector2(430, textY), loadColor);
 
                 // Daily profit
                 Color profitTextColor = route.DailyProfit >= 0 ? RetroColorPalette.Success : RetroColorPalette.Error;
                 string profitText = route.DailyProfit >= 0 ? $"+${route.DailyProfit:N0}" : $"-${Math.Abs(route.DailyProfit):N0}";
-                AirlineTycoonGame.TextRenderer.DrawText(spriteBatch, profitText, new Vector2(420, textY), profitTextColor);
+                AirlineTycoonGame.TextRenderer.DrawText(spriteBatch, profitText, new Vector2(490, textY), profitTextColor);
 
                 // Assigned aircraft
                 string aircraftText = route.AssignedAircraft != null
                     ? route.AssignedAircraft.RegistrationNumber
                     : "UNASSIGNED";
                 Color aircraftColor = route.AssignedAircraft != null ? RetroColorPalette.TextSecondary : RetroColorPalette.Warning;
-                AirlineTycoonGame.TextRenderer.DrawText(spriteBatch, aircraftText, new Vector2(560, textY), aircraftColor);
+                AirlineTycoonGame.TextRenderer.DrawText(spriteBatch, aircraftText, new Vector2(600, textY), aircraftColor);
 
                 // Status
                 string statusText = route.IsActive ? "Active" : "Closed";
@@ -345,10 +378,65 @@ public class RouteManagementScreen : Screen
         this.DrawFilledRectangle(spriteBatch, stat2, RetroColorPalette.Success);
         this.Draw3DBorder(spriteBatch, stat2, 1);
 
-        // Chart area
-        var chartBounds = new Rectangle(840, 240, 400, 200);
-        this.DrawFilledRectangle(spriteBatch, chartBounds, Color.Black);
-        this.Draw3DBorder(spriteBatch, chartBounds, 1);
+        // Route visualization area (mini map showing origin and destination)
+        var mapBounds = new Rectangle(840, 240, 400, 200);
+        this.DrawFilledRectangle(spriteBatch, mapBounds, new Color(20, 30, 40)); // Dark blue background
+        this.Draw3DBorder(spriteBatch, mapBounds, 1);
+
+        // Get the first route for visualization (simplified)
+        var routes = this.Controller?.Game.PlayerAirline.Routes.ToList() ?? new List<AirlineTycoon.Domain.Route>();
+        if (routes.Count > 0 && AirlineTycoonGame.SpriteManager != null)
+        {
+            var route = routes[0]; // Show first route for now
+
+            // Calculate positions for origin and destination airports
+            int centerX = mapBounds.X + mapBounds.Width / 2;
+            int centerY = mapBounds.Y + mapBounds.Height / 2;
+
+            // Origin on left, destination on right
+            var originPos = new Vector2(mapBounds.X + 80, centerY);
+            var destPos = new Vector2(mapBounds.X + mapBounds.Width - 80, centerY);
+
+            // Draw flight path line
+            this.DrawRouteLine(spriteBatch, originPos, destPos, route.IsActive ? RetroColorPalette.Success : RetroColorPalette.TextSecondary);
+
+            // Draw airport icons
+            var hubIcon = AirlineTycoonGame.SpriteManager.GetSprite("airport_hub");
+            if (hubIcon != null)
+            {
+                // Draw origin airport
+                spriteBatch.Draw(
+                    hubIcon,
+                    new Vector2(originPos.X - hubIcon.Width / 2, originPos.Y - hubIcon.Height / 2),
+                    Color.White
+                );
+
+                // Draw destination airport
+                spriteBatch.Draw(
+                    hubIcon,
+                    new Vector2(destPos.X - hubIcon.Width / 2, destPos.Y - hubIcon.Height / 2),
+                    Color.White
+                );
+            }
+
+            // Draw airport codes
+            if (AirlineTycoonGame.TextRenderer != null)
+            {
+                AirlineTycoonGame.TextRenderer.DrawText(
+                    spriteBatch,
+                    route.Origin.Code,
+                    new Vector2(originPos.X - 15, originPos.Y + 20),
+                    Color.White
+                );
+
+                AirlineTycoonGame.TextRenderer.DrawText(
+                    spriteBatch,
+                    route.Destination.Code,
+                    new Vector2(destPos.X - 15, destPos.Y + 20),
+                    Color.White
+                );
+            }
+        }
 
         // Action buttons
         var closeRouteButton = new Rectangle(840, 650, 180, 35);
@@ -480,6 +568,85 @@ public class RouteManagementScreen : Screen
         else
         {
             System.Diagnostics.Debug.WriteLine($"Cannot decrease price below $10 for {route.Name}");
+        }
+    }
+
+    /// <summary>
+    /// Handles increasing the frequency (daily flights) for a route.
+    /// </summary>
+    private void OnIncreaseFrequency(AirlineTycoon.Domain.Route route)
+    {
+        // Increase daily flights by 1, with a reasonable maximum (e.g., 10 flights per day)
+        if (route.DailyFlights < 10)
+        {
+            route.DailyFlights++;
+            System.Diagnostics.Debug.WriteLine($"Increased daily flights for {route.Name} to {route.DailyFlights}x");
+        }
+        else
+        {
+            System.Diagnostics.Debug.WriteLine($"Cannot increase frequency above 10 flights/day for {route.Name}");
+        }
+    }
+
+    /// <summary>
+    /// Handles decreasing the frequency (daily flights) for a route.
+    /// </summary>
+    private void OnDecreaseFrequency(AirlineTycoon.Domain.Route route)
+    {
+        // Decrease daily flights by 1, but don't go below 1
+        if (route.DailyFlights > 1)
+        {
+            route.DailyFlights--;
+            System.Diagnostics.Debug.WriteLine($"Decreased daily flights for {route.Name} to {route.DailyFlights}x");
+        }
+        else
+        {
+            System.Diagnostics.Debug.WriteLine($"Cannot decrease frequency below 1 flight/day for {route.Name}");
+        }
+    }
+
+    /// <summary>
+    /// Draws a route line connecting two airports on the map.
+    /// Uses a simple dashed line effect for visual interest.
+    /// </summary>
+    /// <param name="spriteBatch">The sprite batch for drawing.</param>
+    /// <param name="start">Starting position (origin airport).</param>
+    /// <param name="end">Ending position (destination airport).</param>
+    /// <param name="color">Color of the route line.</param>
+    private void DrawRouteLine(SpriteBatch spriteBatch, Vector2 start, Vector2 end, Color color)
+    {
+        if (AirlineTycoonGame.WhitePixel == null)
+        {
+            return;
+        }
+
+        // Calculate line parameters
+        float distance = Vector2.Distance(start, end);
+        float angle = (float)System.Math.Atan2(end.Y - start.Y, end.X - start.X);
+        int thickness = 2;
+
+        // Draw dashed line (segments with gaps)
+        int dashLength = 10;
+        int gapLength = 5;
+        int totalSegmentLength = dashLength + gapLength;
+        int numSegments = (int)(distance / totalSegmentLength);
+
+        for (int i = 0; i < numSegments; i++)
+        {
+            float segmentStart = i * totalSegmentLength;
+            float segmentX = start.X + segmentStart * (float)System.Math.Cos(angle);
+            float segmentY = start.Y + segmentStart * (float)System.Math.Sin(angle);
+
+            spriteBatch.Draw(
+                AirlineTycoonGame.WhitePixel,
+                new Rectangle((int)segmentX, (int)segmentY, dashLength, thickness),
+                null,
+                color,
+                angle,
+                Vector2.Zero,
+                SpriteEffects.None,
+                0
+            );
         }
     }
 }

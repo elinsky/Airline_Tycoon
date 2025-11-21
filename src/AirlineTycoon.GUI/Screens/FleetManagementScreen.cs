@@ -179,7 +179,15 @@ public class FleetManagementScreen : Screen
             this.DrawFilledRectangle(spriteBatch, iconBounds, RetroColorPalette.AircraftWhite);
             this.Draw3DBorder(spriteBatch, iconBounds, 1);
 
-            // TODO: Draw actual aircraft sprite here
+            // Draw aircraft sprite (centered in icon area)
+            var aircraftSprite = this.GetAircraftSprite(aircraft.Type.Name);
+            if (aircraftSprite != null)
+            {
+                // Center the sprite in the icon area
+                int spriteX = iconBounds.X + (iconBounds.Width - aircraftSprite.Width) / 2;
+                int spriteY = iconBounds.Y + (iconBounds.Height - aircraftSprite.Height) / 2;
+                spriteBatch.Draw(aircraftSprite, new Vector2(spriteX, spriteY), Color.White);
+            }
 
             // Info area (right side)
             int infoX = x + 120;
@@ -277,7 +285,27 @@ public class FleetManagementScreen : Screen
         this.DrawFilledRectangle(spriteBatch, imageBounds, RetroColorPalette.AircraftWhite);
         this.Draw3DBorder(spriteBatch, imageBounds, 2);
 
-        // TODO: Draw actual aircraft sprite
+        // Draw aircraft sprite (centered and scaled 2x for detail view)
+        var fleet = this.Controller?.Game.PlayerAirline.Fleet.ToList() ?? new List<AirlineTycoon.Domain.Aircraft>();
+        if (fleet.Count > 0)
+        {
+            var selectedAircraft = fleet[0]; // Show first aircraft for now
+            var aircraftSprite = this.GetAircraftSprite(selectedAircraft.Type.Name);
+            if (aircraftSprite != null)
+            {
+                // Center the sprite in the image area, scaled 2.5x for detail
+                float scale = 2.5f;
+                int scaledWidth = (int)(aircraftSprite.Width * scale);
+                int scaledHeight = (int)(aircraftSprite.Height * scale);
+                int spriteX = imageBounds.X + (imageBounds.Width - scaledWidth) / 2;
+                int spriteY = imageBounds.Y + (imageBounds.Height - scaledHeight) / 2;
+                spriteBatch.Draw(
+                    aircraftSprite,
+                    new Rectangle(spriteX, spriteY, scaledWidth, scaledHeight),
+                    Color.White
+                );
+            }
+        }
 
         // Specs panel
         var specsBounds = new Rectangle(840, 360, 400, 240);
@@ -519,5 +547,26 @@ public class FleetManagementScreen : Screen
             this.maintenanceButtons.Clear();
             this.sellReturnButtons.Clear();
         }
+    }
+
+    /// <summary>
+    /// Gets the aircraft sprite texture for a given aircraft type name.
+    /// </summary>
+    /// <param name="aircraftTypeName">The name of the aircraft type (e.g., "Boeing 737").</param>
+    /// <returns>The sprite texture, or null if not found.</returns>
+    private Texture2D? GetAircraftSprite(string aircraftTypeName)
+    {
+        // Map aircraft type names to sprite keys
+        string spriteKey = aircraftTypeName.ToLowerInvariant() switch
+        {
+            "embraer e175" => "aircraft_embraer_e175",
+            "boeing 737" => "aircraft_boeing_737",
+            "airbus a320" => "aircraft_airbus_a320",
+            "boeing 787" => "aircraft_boeing_787",
+            "airbus a380" => "aircraft_airbus_a380",
+            _ => null
+        };
+
+        return spriteKey != null ? AirlineTycoonGame.SpriteManager?.GetSprite(spriteKey) : null;
     }
 }

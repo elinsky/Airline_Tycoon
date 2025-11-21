@@ -25,6 +25,7 @@ public class DashboardScreen : Screen
     private UIButton? viewFleetButton;
     private UIButton? viewCompetitorsButton;
     private UIButton? viewFinancialsButton;
+    private UIButton? saveLoadButton;
     private UIButton? advanceDayButton;
 
     /// <inheritdoc/>
@@ -83,6 +84,14 @@ public class DashboardScreen : Screen
         );
         this.viewFinancialsButton.Clicked += (s, e) => this.OnViewFinancials();
         this.AddChild(this.viewFinancialsButton);
+
+        this.saveLoadButton = new UIButton(
+            "Save / Load Game",
+            new Vector2(buttonX, buttonY + buttonSpacing * 4),
+            new Vector2(buttonWidth, buttonHeight)
+        );
+        this.saveLoadButton.Clicked += (s, e) => this.OnSaveLoad();
+        this.AddChild(this.saveLoadButton);
 
         // Advance day button (prominent, bottom left)
         this.advanceDayButton = new UIButton(
@@ -327,6 +336,14 @@ public class DashboardScreen : Screen
     }
 
     /// <summary>
+    /// Handles the Save/Load Game button click.
+    /// </summary>
+    private void OnSaveLoad()
+    {
+        this.Controller?.ShowSaveLoad();
+    }
+
+    /// <summary>
     /// Handles the Advance Day button click.
     /// </summary>
     private void OnAdvanceDay()
@@ -335,6 +352,9 @@ public class DashboardScreen : Screen
         {
             if (this.Controller != null)
             {
+                // Play day advance sound
+                AirlineTycoonGame.AudioManager?.PlayDayAdvance();
+
                 // Process the day and get results
                 var summary = this.Controller.AdvanceDay();
 

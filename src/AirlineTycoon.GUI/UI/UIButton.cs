@@ -179,8 +179,10 @@ public class UIButton : UIElement
             float drift = Vector2.Distance(position, this.pressStartPosition);
             if (this.ContainsPoint(position) || drift < 50f)
             {
+                // Play button click sound
+                AirlineTycoonGame.AudioManager?.PlayButtonClick();
+
                 this.OnClick();
-                // TODO: Play button click sound effect
                 return true;
             }
         }

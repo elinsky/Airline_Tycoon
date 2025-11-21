@@ -1,6 +1,8 @@
 using AirlineTycoon.GUI.Screens;
 using AirlineTycoon;
+using AirlineTycoon.Services;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace AirlineTycoon.GUI;
@@ -19,8 +21,9 @@ namespace AirlineTycoon.GUI;
 /// </remarks>
 public class GameController
 {
-    private readonly AirlineTycoon.Game game;
+    private AirlineTycoon.Game game;
     private readonly ScreenManager screenManager;
+    private readonly SaveGameService saveGameService;
 
     /// <summary>
     /// Gets the game instance.
@@ -40,6 +43,7 @@ public class GameController
     {
         this.screenManager = screenManager;
         this.game = new AirlineTycoon.Game();
+        this.saveGameService = new SaveGameService();
     }
 
     /// <summary>
@@ -127,11 +131,16 @@ public class GameController
         try
         {
             this.game.PlayerAirline.PurchaseAircraft(aircraftType);
+
+            // Play purchase sound effect
+            AirlineTycoonGame.AudioManager?.PlayPurchase();
+
             return true;
         }
         catch (System.InvalidOperationException)
         {
-            // Not enough cash
+            // Not enough cash - play error sound
+            AirlineTycoonGame.AudioManager?.PlayError();
             return false;
         }
     }
@@ -151,12 +160,17 @@ public class GameController
             this.game.PlayerAirline.LeaseAircraft(aircraftType);
             System.Diagnostics.Debug.WriteLine($"Player cash after: ${this.game.PlayerAirline.Cash:N0}");
             System.Diagnostics.Debug.WriteLine($"Fleet count: {this.game.PlayerAirline.Fleet.Count}");
+
+            // Play purchase sound effect
+            AirlineTycoonGame.AudioManager?.PlayPurchase();
+
             return true;
         }
         catch (System.InvalidOperationException ex)
         {
-            // Some error occurred
+            // Some error occurred - play error sound
             System.Diagnostics.Debug.WriteLine($"LeaseAircraft failed: {ex.Message}");
+            AirlineTycoonGame.AudioManager?.PlayError();
             return false;
         }
     }
@@ -420,5 +434,72 @@ public class GameController
         }
 
         return aircraft.MonthlyLeasePayment * 2m;
+    }
+
+    /// <summary>
+    /// Saves the current game to a file.
+    /// </summary>
+    /// <param name="saveName">The name for this save file.</param>
+    /// <returns>True if save was successful, false otherwise.</returns>
+    public bool SaveGame(string saveName)
+    {
+        try
+        {
+            this.saveGameService.SaveGame(this.game, saveName);
+            return true;
+        }
+        catch (System.Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Failed to save game: {ex.Message}");
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Loads a game from a save file.
+    /// </summary>
+    /// <param name="saveName">The name of the save file to load.</param>
+    /// <returns>True if load was successful, false otherwise.</returns>
+    public bool LoadGame(string saveName)
+    {
+        try
+        {
+            this.game = this.saveGameService.LoadGame(saveName);
+            this.ShowDashboard();
+            return true;
+        }
+        catch (System.Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Failed to load game: {ex.Message}");
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Lists all available save files.
+    /// </summary>
+    /// <returns>List of save game metadata.</returns>
+    public List<SaveGameMetadata> ListSaves()
+    {
+        return this.saveGameService.ListSaves();
+    }
+
+    /// <summary>
+    /// Deletes a save file.
+    /// </summary>
+    /// <param name="saveName">The name of the save file to delete.</param>
+    /// <returns>True if deleted successfully, false otherwise.</returns>
+    public bool DeleteSave(string saveName)
+    {
+        return this.saveGameService.DeleteSave(saveName);
+    }
+
+    /// <summary>
+    /// Shows the save/load screen.
+    /// </summary>
+    public void ShowSaveLoad()
+    {
+        var saveLoadScreen = new SaveLoadScreen(this);
+        this.screenManager.SwitchTo(saveLoadScreen);
     }
 }
