@@ -1,6 +1,7 @@
 using AirlineTycoon.GUI.UI;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using System.Linq;
 
 namespace AirlineTycoon.GUI.Screens;
 
@@ -127,29 +128,53 @@ public class DashboardScreen : Screen
         this.DrawFilledRectangle(spriteBatch, panelBounds, RetroColorPalette.Darken(RetroColorPalette.WindowBackground, 0.8f));
         this.Draw3DBorder(spriteBatch, panelBounds);
 
-        // TODO: Once we have bitmap fonts, display actual stats here:
-        // - Total passengers carried
-        // - Today's profit
-        // - Active routes count
-        // - Fleet size
-        // - Reputation trend
+        // Get actual game data
+        var airline = this.Controller?.Game.PlayerAirline;
+        if (airline == null || AirlineTycoonGame.TextRenderer == null)
+        {
+            return;
+        }
 
-        // For now, draw placeholder colored boxes showing layout
+        // Calculate statistics
+        int passengersToday = airline.Routes.Sum(r => r.TotalPassengers);
+        decimal profitToday = airline.Routes.Sum(r => r.DailyProfit);
+        int activeRoutes = airline.Routes.Count(r => r.IsActive);
+        int totalFleet = airline.Fleet.Count();
+        int assignedAircraft = airline.Routes.Count(r => r.AssignedAircraft != null);
+        decimal fleetUtilization = totalFleet > 0 ? (decimal)assignedAircraft / totalFleet : 0m;
+
+        // Stat 1: Today's Passengers
         var stat1Bounds = new Rectangle(280, 80, 220, 80);
-        this.DrawFilledRectangle(spriteBatch, stat1Bounds, RetroColorPalette.Info);
+        this.DrawFilledRectangle(spriteBatch, stat1Bounds, RetroColorPalette.Darken(RetroColorPalette.Info, 0.8f));
         this.Draw3DBorder(spriteBatch, stat1Bounds, 1);
+        AirlineTycoonGame.TextRenderer.DrawText(spriteBatch, "Passengers Today", new Vector2(290, 90), Color.White);
+        AirlineTycoonGame.TextRenderer.DrawText(spriteBatch, passengersToday.ToString("N0"), new Vector2(290, 115), RetroColorPalette.Info);
 
+        // Stat 2: Today's Profit
         var stat2Bounds = new Rectangle(520, 80, 220, 80);
-        this.DrawFilledRectangle(spriteBatch, stat2Bounds, RetroColorPalette.Success);
+        Color profitColor = profitToday >= 0 ? RetroColorPalette.Success : RetroColorPalette.Error;
+        this.DrawFilledRectangle(spriteBatch, stat2Bounds, RetroColorPalette.Darken(profitColor, 0.8f));
         this.Draw3DBorder(spriteBatch, stat2Bounds, 1);
+        AirlineTycoonGame.TextRenderer.DrawText(spriteBatch, "Today's Profit", new Vector2(530, 90), Color.White);
+        string profitText = profitToday >= 0 ? $"+${profitToday:N0}" : $"-${System.Math.Abs(profitToday):N0}";
+        AirlineTycoonGame.TextRenderer.DrawText(spriteBatch, profitText, new Vector2(530, 115), profitColor);
 
+        // Stat 3: Active Routes
         var stat3Bounds = new Rectangle(760, 80, 220, 80);
-        this.DrawFilledRectangle(spriteBatch, stat3Bounds, RetroColorPalette.Warning);
+        this.DrawFilledRectangle(spriteBatch, stat3Bounds, RetroColorPalette.Darken(RetroColorPalette.Warning, 0.8f));
         this.Draw3DBorder(spriteBatch, stat3Bounds, 1);
+        AirlineTycoonGame.TextRenderer.DrawText(spriteBatch, "Active Routes", new Vector2(770, 90), Color.White);
+        AirlineTycoonGame.TextRenderer.DrawText(spriteBatch, activeRoutes.ToString(), new Vector2(770, 115), RetroColorPalette.Warning);
 
+        // Stat 4: Fleet Utilization
         var stat4Bounds = new Rectangle(1000, 80, 220, 80);
-        this.DrawFilledRectangle(spriteBatch, stat4Bounds, RetroColorPalette.Error);
+        Color utilizationColor = fleetUtilization > 0.8m ? RetroColorPalette.Success :
+                                fleetUtilization > 0.5m ? RetroColorPalette.Warning :
+                                RetroColorPalette.Error;
+        this.DrawFilledRectangle(spriteBatch, stat4Bounds, RetroColorPalette.Darken(utilizationColor, 0.8f));
         this.Draw3DBorder(spriteBatch, stat4Bounds, 1);
+        AirlineTycoonGame.TextRenderer.DrawText(spriteBatch, "Fleet Utilization", new Vector2(1010, 90), Color.White);
+        AirlineTycoonGame.TextRenderer.DrawText(spriteBatch, $"{fleetUtilization:P0}", new Vector2(1010, 115), utilizationColor);
 
         // Graph area (bottom half of panel)
         var graphBounds = new Rectangle(280, 180, 940, 260);
