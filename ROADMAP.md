@@ -168,9 +168,9 @@ Build the most compelling airline simulation game where every gate, route, and j
   - Sound test buttons
 
 ### 2.5.5 Game Integration
-**Goal:** Wire up existing game logic to GUI
+**Goal:** Wire up existing game logic to GUI to create a fully playable game loop
 
-**Features:**
+**Phase A: Foundation (COMPLETE)**
 - [x] Game loop refactor
   - Separate game logic from rendering via GameController
   - Update() and Draw() pattern implemented
@@ -179,16 +179,92 @@ Build the most compelling airline simulation game where every gate, route, and j
   - ScreenManager handles screen transitions
   - Navigation between screens working
   - All screens access game data via Controller
-- [x] Data binding
+- [x] Basic data binding
   - Top bar displays real game data (Day, Cash, Reputation)
   - GameController bridges GUI and game logic
-  - Button handlers call controller methods
-- [ ] Save/load integration **(Deferred)**
+  - Advance Day button processes actual game turns
+- [x] Aircraft purchase/lease functionality
+  - AircraftPurchaseScreen with all 5 aircraft types
+  - Buy and Lease buttons functional
+  - Returns to Fleet Management after purchase
+- [x] Fleet data display
+  - FleetManagementScreen shows actual aircraft from player fleet
+  - Displays: Registration, Type, Condition, Lease status
+  - Shows "No aircraft" message when fleet is empty
+
+**Phase B: Core Gameplay (IN PROGRESS - CRITICAL FOR PLAYABLE GAME)**
+
+**Priority 1: Aircraft Assignment System (REQUIRED)**
+- [ ] Add `AssignAircraftToRoute()` method to GameController
+- [ ] Add `UnassignAircraftFromRoute()` method to GameController
+- [ ] Create aircraft assignment dialog/dropdown in Route Management screen
+- [ ] Show assigned aircraft in route list
+- [ ] Show assignment status in Fleet Management screen
+- [ ] Enable aircraft reassignment between routes
+
+**Priority 2: Route Management System (REQUIRED)**
+- [ ] Display actual routes in RouteManagementScreen
+  - Replace placeholder rows with real route data from `PlayerAirline.Routes`
+  - Show: Origin, Destination, Distance, Ticket Price, Load Factor
+  - Show profitability indicator (green/red)
+  - Show assigned aircraft (or "Unassigned")
+- [ ] Implement "Open Route" dialog
+  - Airport picker for origin (dropdown from Airport.All)
+  - Airport picker for destination (dropdown from Airport.All)
+  - Ticket price input field with suggested price
+  - "Confirm" button calls GameController.OpenRoute()
+- [ ] Wire up "Close Route" functionality
+  - Add close button to each route row
+  - Confirmation dialog
+  - Call GameController.CloseRoute()
+- [ ] Add route assignment from Route Management screen
+  - "Assign Aircraft" button for each unassigned route
+  - Dropdown showing available (unassigned) aircraft
+  - Visual feedback when route becomes operational
+
+**Priority 3: Dashboard Real Data (IMPORTANT)**
+- [ ] Display actual game statistics
+  - Today's passengers carried (sum across all routes)
+  - Today's profit/loss (from DailyOperationsSummary)
+  - Active routes count
+  - Fleet utilization percentage
+- [ ] Display recent events in events ticker
+  - Show last 3-5 events from PlayerAirline.ActiveEvents
+  - Scroll or fade animation
+  - Color-code by event severity
+
+**Phase C: Enhanced Screens (NICE TO HAVE)**
+- [ ] Competitor screen with real data
+  - Display actual competitors from Game.Competitors
+  - Show their fleet size, route count, cash
+  - Show overlapping routes (where you compete)
+- [ ] Financial report with real data
+  - Calculate revenue/cost breakdown from PlayerAirline
+  - Show expense percentages (fuel, crew, airports, etc.)
+  - Display profit trend (need to track historical data)
+- [ ] Aircraft maintenance functionality
+  - "Perform Maintenance" button in Fleet Management
+  - Show maintenance cost preview
+  - Call Aircraft.PerformMaintenance() via GameController
+- [ ] Sell/return aircraft functionality
+  - "Sell" button for owned aircraft (get 70% of purchase price)
+  - "Return" button for leased aircraft (early termination penalty)
+
+**Phase D: Polish (DEFERRED)**
+- [ ] Save/load integration
   - Keep existing JSON save system
   - Add "Load Game" screen with save previews
   - Auto-save option
+- [ ] Route price adjustment
+  - Edit ticket price for existing routes
+  - Show demand response preview
+- [ ] Route frequency adjustment
+  - Change daily flights per route
+  - Affects revenue and costs
 
-**Status:** Core integration complete! GUI now displays real game data and screen navigation works. Advance Day button processes actual game turns. Save/load deferred to later phase.
+**Current Status:** Foundation complete (Phase A). Game engine is fully functional - time advances, revenue calculates, AI competes, events occur. **CRITICAL GAP:** Players cannot assign aircraft to routes or open new routes, making the game unplayable beyond the initial setup. Phase B is essential to complete the core game loop.
+
+**Why Phase B is Critical:** Without aircraft assignment, purchased planes sit idle. Without route opening, players cannot expand. These are the "steering wheel" of the game - the engine runs but you can't drive it.
 
 ### Implementation Approach
 
