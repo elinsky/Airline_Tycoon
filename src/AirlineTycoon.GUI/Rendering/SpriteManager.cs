@@ -125,7 +125,7 @@ public class SpriteManager
             SpriteGenerator.Generate9SlicePanel(
                 this.graphicsDevice,
                 48,
-                RetroColorPalette.ButtonBorderDark,
+                RetroColorPalette.PanelShadow,
                 RetroColorPalette.Darken(RetroColorPalette.WindowBackground, 0.8f)
             ));
 
