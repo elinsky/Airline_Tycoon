@@ -241,14 +241,19 @@ public class AircraftPurchaseScreen : Screen
     /// </summary>
     private void OnPurchaseAircraft(AircraftType aircraftType)
     {
+        System.Diagnostics.Debug.WriteLine($"OnPurchaseAircraft called: isLease={this.isLease}, aircraft={aircraftType.Name}");
+
         if (this.Controller == null)
         {
+            System.Diagnostics.Debug.WriteLine("Controller is null!");
             return;
         }
 
         bool success = this.isLease
             ? this.Controller.LeaseAircraft(aircraftType)
             : this.Controller.PurchaseAircraft(aircraftType);
+
+        System.Diagnostics.Debug.WriteLine($"Operation result: success={success}");
 
         if (success)
         {

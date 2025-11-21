@@ -134,14 +134,20 @@ public class GameController
     /// <returns>True if the lease was successful, false otherwise.</returns>
     public bool LeaseAircraft(AirlineTycoon.Domain.AircraftType aircraftType)
     {
+        System.Diagnostics.Debug.WriteLine($"GameController.LeaseAircraft called for {aircraftType.Name}");
+        System.Diagnostics.Debug.WriteLine($"Player cash before: ${this.game.PlayerAirline.Cash:N0}");
+
         try
         {
             this.game.PlayerAirline.LeaseAircraft(aircraftType);
+            System.Diagnostics.Debug.WriteLine($"Player cash after: ${this.game.PlayerAirline.Cash:N0}");
+            System.Diagnostics.Debug.WriteLine($"Fleet count: {this.game.PlayerAirline.Fleet.Count}");
             return true;
         }
-        catch (System.InvalidOperationException)
+        catch (System.InvalidOperationException ex)
         {
             // Some error occurred
+            System.Diagnostics.Debug.WriteLine($"LeaseAircraft failed: {ex.Message}");
             return false;
         }
     }
