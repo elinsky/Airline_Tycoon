@@ -296,8 +296,7 @@ public class RouteManagementScreen : Screen
     /// </summary>
     private void OnOpenRoute()
     {
-        // TODO: Show route selection dialog
-        System.Diagnostics.Debug.WriteLine("Open new route dialog");
+        this.Controller?.ShowOpenRoute();
     }
 
     /// <summary>

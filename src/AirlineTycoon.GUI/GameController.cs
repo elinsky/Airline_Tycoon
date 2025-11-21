@@ -109,6 +109,15 @@ public class GameController
     }
 
     /// <summary>
+    /// Navigates to the open route screen.
+    /// </summary>
+    public void ShowOpenRoute()
+    {
+        var openRouteScreen = new OpenRouteScreen(this);
+        this.screenManager.SwitchTo(openRouteScreen);
+    }
+
+    /// <summary>
     /// Purchases an aircraft of the specified type.
     /// </summary>
     /// <param name="aircraftType">The type of aircraft to purchase.</param>
