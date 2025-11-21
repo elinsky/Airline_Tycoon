@@ -1,6 +1,8 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using AirlineTycoon.GUI.Screens;
+using AirlineTycoon.GUI.UI;
 
 namespace AirlineTycoon.GUI;
 
@@ -24,6 +26,11 @@ public class AirlineTycoonGame : Game
     private readonly GraphicsDeviceManager graphics;
     private SpriteBatch spriteBatch = null!;
     private RenderTarget2D renderTarget = null!;
+    private ScreenManager screenManager = null!;
+
+    // Mouse state tracking for input handling
+    private MouseState previousMouseState;
+    private MouseState currentMouseState;
 
     /// <summary>
     /// Base resolution for pixel-perfect rendering.
@@ -95,6 +102,13 @@ public class AirlineTycoonGame : Game
             0,
             RenderTargetUsage.DiscardContents
         );
+
+        // Initialize screen manager
+        // TODO: Pass actual game instance once we integrate game logic
+        this.screenManager = new ScreenManager(game: null);
+
+        // Start with the dashboard screen
+        this.screenManager.SwitchTo(new DashboardScreen());
     }
 
     /// <summary>
@@ -109,13 +123,61 @@ public class AirlineTycoonGame : Game
             Exit();
         }
 
-        // TODO: Add game update logic here
-        // This will eventually process:
-        // - Input handling (mouse clicks, keyboard)
-        // - Screen state management (main menu, dashboard, route screen, etc.)
-        // - Game simulation updates
+        // Update mouse state
+        this.previousMouseState = this.currentMouseState;
+        this.currentMouseState = Mouse.GetState();
+
+        // Convert mouse position from screen space to game space
+        var mouseScreenPos = new Vector2(this.currentMouseState.X, this.currentMouseState.Y);
+        var mouseGamePos = this.ScreenToGameCoordinates(mouseScreenPos);
+
+        // Handle mouse events
+        this.HandleMouseEvents(mouseGamePos);
+
+        // Update screen manager
+        this.screenManager?.Update(gameTime);
 
         base.Update(gameTime);
+    }
+
+    /// <summary>
+    /// Handles mouse input events and delegates to screen manager.
+    /// </summary>
+    private void HandleMouseEvents(Vector2 mouseGamePos)
+    {
+        // Mouse move
+        if (this.currentMouseState.Position != this.previousMouseState.Position)
+        {
+            this.screenManager?.OnMouseMove(mouseGamePos);
+        }
+
+        // Left mouse button down
+        if (this.currentMouseState.LeftButton == ButtonState.Pressed &&
+            this.previousMouseState.LeftButton == ButtonState.Released)
+        {
+            this.screenManager?.OnMouseDown(mouseGamePos, MouseButton.Left);
+        }
+
+        // Left mouse button up
+        if (this.currentMouseState.LeftButton == ButtonState.Released &&
+            this.previousMouseState.LeftButton == ButtonState.Pressed)
+        {
+            this.screenManager?.OnMouseUp(mouseGamePos, MouseButton.Left);
+        }
+
+        // Right mouse button down
+        if (this.currentMouseState.RightButton == ButtonState.Pressed &&
+            this.previousMouseState.RightButton == ButtonState.Released)
+        {
+            this.screenManager?.OnMouseDown(mouseGamePos, MouseButton.Right);
+        }
+
+        // Right mouse button up
+        if (this.currentMouseState.RightButton == ButtonState.Released &&
+            this.previousMouseState.RightButton == ButtonState.Pressed)
+        {
+            this.screenManager?.OnMouseUp(mouseGamePos, MouseButton.Right);
+        }
     }
 
     /// <summary>
@@ -137,9 +199,8 @@ public class AirlineTycoonGame : Game
             RasterizerState.CullNone
         );
 
-        // TODO: Draw game screens here
-        // For now, draw a test pattern to verify pixel-perfect rendering
-        this.DrawTestPattern();
+        // Draw the current screen
+        this.screenManager?.Draw(this.spriteBatch, gameTime);
 
         this.spriteBatch.End();
 
@@ -173,19 +234,6 @@ public class AirlineTycoonGame : Game
         base.Draw(gameTime);
     }
 
-    /// <summary>
-    /// Draws a test pattern to verify pixel-perfect rendering.
-    /// Will be removed once UI framework is implemented.
-    /// </summary>
-    private void DrawTestPattern()
-    {
-        // Draw a simple pixel grid to verify sharp rendering
-        // This will be replaced with actual UI once the framework is built
-
-        // TODO: Remove this once UI framework is implemented
-        // For now, just clear to a dark blue (RCT-like color)
-        GraphicsDevice.Clear(new Color(28, 40, 79)); // Dark blue similar to RCT menu background
-    }
 
     /// <summary>
     /// Handles window resize events.

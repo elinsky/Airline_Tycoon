@@ -83,27 +83,29 @@ Build the most compelling airline simulation game where every gate, route, and j
 **Goal:** Replace console UI with pixel art screens
 
 **Features:**
-- [ ] Main dashboard (RCT-style top bar)
-  - Current day, cash, reputation meters
-  - Quick stats (passengers, profit, routes)
-  - Notification ticker for events
-- [ ] Route management screen
+- [x] Main dashboard (RCT-style top bar)
+  - Current day, cash, reputation meters (placeholders)
+  - Quick stats (passengers, profit, routes) (placeholders)
+  - Notification ticker for events (placeholders)
+- [x] Route management screen
   - List view with sortable columns
   - Route profitability visualization (red/green indicators)
   - Click to view route details
   - Open/close route buttons
-- [ ] Fleet management screen
-  - Aircraft list with icons
+- [x] Fleet management screen
+  - Aircraft grid with cards
   - Condition bars (like RCT ride excitement ratings)
-  - Buy/lease dialogs with pixel art aircraft previews
-- [ ] Competitor screen
-  - Airline logos/icons
+  - Buy/lease buttons
+- [x] Competitor screen
+  - Airline cards with stats
   - Comparative bar charts (passengers, revenue)
-  - Competitor route overlay
-- [ ] Financial report screen
-  - Pixel art graphs (line charts for trends)
-  - Expense breakdown pie chart
-  - Historical data view
+  - Competitor details panel
+- [x] Financial report screen
+  - Income statement panel
+  - Expense breakdown (with legend)
+  - Historical trend chart (placeholder graph)
+
+**Note:** Text rendering deferred to Phase 2.5.3 (bitmap fonts). Screens use colored placeholders to show layout.
 
 ### 2.5.3 Pixel Art Assets
 **Goal:** Create retro-style visual assets
