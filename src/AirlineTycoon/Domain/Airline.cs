@@ -468,6 +468,70 @@ public class Airline
         this.Fleet.Add(aircraft);
         return aircraft;
     }
+
+    /// <summary>
+    /// Sells an owned aircraft, adding 70% of purchase price to cash.
+    /// Like selling a ride in RCT, this provides immediate cash but reduces capacity.
+    /// </summary>
+    /// <param name="aircraft">The aircraft to sell.</param>
+    /// <exception cref="InvalidOperationException">Thrown if aircraft is leased or assigned to a route.</exception>
+    public void SellAircraft(Aircraft aircraft)
+    {
+        if (aircraft.IsLeased)
+        {
+            throw new InvalidOperationException(
+                $"Cannot sell leased aircraft {aircraft.RegistrationNumber}. Use ReturnLeasedAircraft instead."
+            );
+        }
+
+        if (aircraft.AssignedRoute != null)
+        {
+            throw new InvalidOperationException(
+                $"Cannot sell aircraft {aircraft.RegistrationNumber} while assigned to route {aircraft.AssignedRoute.Name}. Unassign first."
+            );
+        }
+
+        // Sell for 70% of purchase price
+        decimal salePrice = aircraft.Type.PurchasePrice * 0.70m;
+        this.Cash += salePrice;
+        this.Fleet.Remove(aircraft);
+    }
+
+    /// <summary>
+    /// Returns a leased aircraft, paying early termination penalty.
+    /// Penalty is 2 months of lease payments.
+    /// </summary>
+    /// <param name="aircraft">The aircraft to return.</param>
+    /// <exception cref="InvalidOperationException">Thrown if aircraft is owned or assigned to a route.</exception>
+    public void ReturnLeasedAircraft(Aircraft aircraft)
+    {
+        if (!aircraft.IsLeased)
+        {
+            throw new InvalidOperationException(
+                $"Cannot return owned aircraft {aircraft.RegistrationNumber}. Use SellAircraft instead."
+            );
+        }
+
+        if (aircraft.AssignedRoute != null)
+        {
+            throw new InvalidOperationException(
+                $"Cannot return aircraft {aircraft.RegistrationNumber} while assigned to route {aircraft.AssignedRoute.Name}. Unassign first."
+            );
+        }
+
+        // Early termination penalty: 2 months of lease payments
+        decimal penalty = aircraft.MonthlyLeasePayment * 2m;
+
+        if (this.Cash < penalty)
+        {
+            throw new InvalidOperationException(
+                $"Insufficient funds to pay early termination penalty. Need ${penalty:N0}, have ${this.Cash:N0}"
+            );
+        }
+
+        this.Cash -= penalty;
+        this.Fleet.Remove(aircraft);
+    }
 }
 
 /// <summary>

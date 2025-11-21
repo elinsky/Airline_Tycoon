@@ -26,6 +26,7 @@ public class FleetManagementScreen : Screen
     private UIButton? buyAircraftButton;
     private UIButton? leaseAircraftButton;
     private List<UIButton> maintenanceButtons = new();
+    private List<UIButton> sellReturnButtons = new();
 
     /// <inheritdoc/>
     public override string Title => "Fleet Management";
@@ -338,7 +339,7 @@ public class FleetManagementScreen : Screen
     }
 
     /// <summary>
-    /// Rebuilds the maintenance buttons for each aircraft in the fleet.
+    /// Rebuilds the maintenance and sell/return buttons for each aircraft in the fleet.
     /// Called during Update to keep buttons in sync with fleet.
     /// </summary>
     private void RebuildMaintenanceButtons()
@@ -346,18 +347,23 @@ public class FleetManagementScreen : Screen
         var fleet = this.Controller?.Game.PlayerAirline.Fleet.ToList() ?? new List<AirlineTycoon.Domain.Aircraft>();
 
         // If fleet count matches button count, no rebuild needed
-        if (fleet.Count == this.maintenanceButtons.Count)
+        if (fleet.Count == this.maintenanceButtons.Count && fleet.Count == this.sellReturnButtons.Count)
         {
             return;
         }
 
-        // Remove existing maintenance buttons
+        // Remove existing buttons
         foreach (var button in this.maintenanceButtons)
         {
             this.RemoveChild(button);
         }
-
         this.maintenanceButtons.Clear();
+
+        foreach (var button in this.sellReturnButtons)
+        {
+            this.RemoveChild(button);
+        }
+        this.sellReturnButtons.Clear();
 
         // Create new maintenance buttons for each aircraft
         int cardWidth = 360;
@@ -400,6 +406,45 @@ public class FleetManagementScreen : Screen
 
             this.maintenanceButtons.Add(maintenanceButton);
             this.AddChild(maintenanceButton);
+
+            // Create sell/return button (to the left of maintenance button)
+            string buttonText;
+            decimal amount;
+            bool isAffordable = true;
+
+            if (aircraft.IsLeased)
+            {
+                // Return button for leased aircraft
+                amount = this.Controller?.CalculateReturnPenalty(aircraft.RegistrationNumber) ?? 0;
+                buttonText = $"Return (-${amount:N0})";
+                isAffordable = this.Controller?.Game.PlayerAirline.Cash >= amount;
+            }
+            else
+            {
+                // Sell button for owned aircraft
+                amount = this.Controller?.CalculateSaleValue(aircraft.RegistrationNumber) ?? 0;
+                buttonText = $"Sell (+${amount:N0})";
+            }
+
+            var sellReturnButton = new UIButton(
+                buttonText,
+                new Vector2(x + 10, y + cardHeight - 35),
+                new Vector2(140, 30)
+            );
+
+            // Disable if aircraft is assigned to a route or can't afford return penalty
+            bool isAssigned = aircraft.AssignedRoute != null;
+            if (isAssigned || !isAffordable)
+            {
+                sellReturnButton.IsEnabled = false;
+            }
+
+            string regForSell = aircraft.RegistrationNumber;
+            bool isLeasedForSell = aircraft.IsLeased;
+            sellReturnButton.Clicked += (s, e) => this.OnSellOrReturnAircraft(regForSell, isLeasedForSell);
+
+            this.sellReturnButtons.Add(sellReturnButton);
+            this.AddChild(sellReturnButton);
         }
     }
 
@@ -425,6 +470,54 @@ public class FleetManagementScreen : Screen
         else
         {
             System.Diagnostics.Debug.WriteLine($"Maintenance failed for {aircraftRegistration} - insufficient funds or aircraft not found");
+        }
+    }
+
+    /// <summary>
+    /// Handles the sell/return button click for a specific aircraft.
+    /// </summary>
+    /// <param name="aircraftRegistration">The registration number of the aircraft.</param>
+    /// <param name="isLeased">Whether the aircraft is leased (return) or owned (sell).</param>
+    private void OnSellOrReturnAircraft(string aircraftRegistration, bool isLeased)
+    {
+        if (this.Controller == null)
+        {
+            return;
+        }
+
+        bool success;
+        if (isLeased)
+        {
+            // Return leased aircraft
+            success = this.Controller.ReturnLeasedAircraft(aircraftRegistration);
+            if (success)
+            {
+                System.Diagnostics.Debug.WriteLine($"Returned leased aircraft {aircraftRegistration}");
+            }
+            else
+            {
+                System.Diagnostics.Debug.WriteLine($"Failed to return aircraft {aircraftRegistration} - insufficient funds, assigned to route, or not found");
+            }
+        }
+        else
+        {
+            // Sell owned aircraft
+            success = this.Controller.SellAircraft(aircraftRegistration);
+            if (success)
+            {
+                System.Diagnostics.Debug.WriteLine($"Sold aircraft {aircraftRegistration}");
+            }
+            else
+            {
+                System.Diagnostics.Debug.WriteLine($"Failed to sell aircraft {aircraftRegistration} - assigned to route or not found");
+            }
+        }
+
+        if (success)
+        {
+            // Force button rebuild to reflect fleet changes
+            this.maintenanceButtons.Clear();
+            this.sellReturnButtons.Clear();
         }
     }
 }

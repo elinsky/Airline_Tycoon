@@ -331,4 +331,94 @@ public class GameController
         decimal baseCost = aircraft.Type.PurchasePrice * 0.02m;
         return baseCost * (decimal)maintenanceLevel;
     }
+
+    /// <summary>
+    /// Sells an owned aircraft for 70% of purchase price.
+    /// </summary>
+    /// <param name="aircraftRegistration">The registration number of the aircraft to sell.</param>
+    /// <returns>True if sale was successful, false otherwise.</returns>
+    public bool SellAircraft(string aircraftRegistration)
+    {
+        try
+        {
+            var aircraft = this.game.PlayerAirline.Fleet
+                .FirstOrDefault(a => a.RegistrationNumber == aircraftRegistration);
+
+            if (aircraft == null)
+            {
+                return false;
+            }
+
+            this.game.PlayerAirline.SellAircraft(aircraft);
+            return true;
+        }
+        catch (System.Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Failed to sell aircraft: {ex.Message}");
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Returns a leased aircraft with early termination penalty (2 months lease payment).
+    /// </summary>
+    /// <param name="aircraftRegistration">The registration number of the aircraft to return.</param>
+    /// <returns>True if return was successful, false otherwise.</returns>
+    public bool ReturnLeasedAircraft(string aircraftRegistration)
+    {
+        try
+        {
+            var aircraft = this.game.PlayerAirline.Fleet
+                .FirstOrDefault(a => a.RegistrationNumber == aircraftRegistration);
+
+            if (aircraft == null)
+            {
+                return false;
+            }
+
+            this.game.PlayerAirline.ReturnLeasedAircraft(aircraft);
+            return true;
+        }
+        catch (System.Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Failed to return leased aircraft: {ex.Message}");
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Calculates the value received from selling an owned aircraft (70% of purchase price).
+    /// </summary>
+    /// <param name="aircraftRegistration">The registration number of the aircraft.</param>
+    /// <returns>The sale value, or 0 if aircraft not found or is leased.</returns>
+    public decimal CalculateSaleValue(string aircraftRegistration)
+    {
+        var aircraft = this.game.PlayerAirline.Fleet
+            .FirstOrDefault(a => a.RegistrationNumber == aircraftRegistration);
+
+        if (aircraft == null || aircraft.IsLeased)
+        {
+            return 0m;
+        }
+
+        return aircraft.Type.PurchasePrice * 0.70m;
+    }
+
+    /// <summary>
+    /// Calculates the penalty for returning a leased aircraft (2 months lease payment).
+    /// </summary>
+    /// <param name="aircraftRegistration">The registration number of the aircraft.</param>
+    /// <returns>The penalty amount, or 0 if aircraft not found or is owned.</returns>
+    public decimal CalculateReturnPenalty(string aircraftRegistration)
+    {
+        var aircraft = this.game.PlayerAirline.Fleet
+            .FirstOrDefault(a => a.RegistrationNumber == aircraftRegistration);
+
+        if (aircraft == null || !aircraft.IsLeased)
+        {
+            return 0m;
+        }
+
+        return aircraft.MonthlyLeasePayment * 2m;
+    }
 }
