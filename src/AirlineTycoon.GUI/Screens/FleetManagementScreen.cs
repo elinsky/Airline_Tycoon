@@ -1,6 +1,8 @@
 using AirlineTycoon.GUI.UI;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace AirlineTycoon.GUI.Screens;
 
@@ -108,65 +110,135 @@ public class FleetManagementScreen : Screen
         var titleBounds = new Rectangle(30, 110, 760, 30);
         this.DrawFilledRectangle(spriteBatch, titleBounds, RetroColorPalette.TitleBarBackground);
 
+        if (AirlineTycoonGame.TextRenderer != null)
+        {
+            AirlineTycoonGame.TextRenderer.DrawText(
+                spriteBatch,
+                "Your Fleet",
+                new Vector2(40, 117),
+                Color.White
+            );
+        }
+
+        // Get actual fleet data
+        var fleet = this.Controller?.Game.PlayerAirline.Fleet.ToList() ?? new List<AirlineTycoon.Domain.Aircraft>();
+
+        if (fleet.Count == 0)
+        {
+            // Show "No aircraft" message
+            if (AirlineTycoonGame.TextRenderer != null)
+            {
+                AirlineTycoonGame.TextRenderer.DrawText(
+                    spriteBatch,
+                    "No aircraft in your fleet. Click 'Buy Aircraft' or 'Lease Aircraft' to add planes.",
+                    new Vector2(40, 160),
+                    RetroColorPalette.TextSecondary
+                );
+            }
+            return;
+        }
+
         // Aircraft grid (2 columns)
         int cardWidth = 360;
         int cardHeight = 120;
         int cardSpacing = 20;
         int startX = 40;
         int startY = 160;
+        int cardsPerRow = 2;
 
-        for (int row = 0; row < 3; row++)
+        for (int i = 0; i < fleet.Count; i++)
         {
-            for (int col = 0; col < 2; col++)
+            var aircraft = fleet[i];
+            int row = i / cardsPerRow;
+            int col = i % cardsPerRow;
+            int x = startX + (col * (cardWidth + cardSpacing));
+            int y = startY + (row * (cardHeight + cardSpacing));
+
+            var cardBounds = new Rectangle(x, y, cardWidth, cardHeight);
+
+            // Card background
+            this.DrawFilledRectangle(spriteBatch, cardBounds, RetroColorPalette.Darken(RetroColorPalette.WindowBackground, 0.9f));
+            this.Draw3DBorder(spriteBatch, cardBounds, 2);
+
+            // Aircraft icon area (left side)
+            var iconBounds = new Rectangle(x + 10, y + 10, 100, 100);
+            this.DrawFilledRectangle(spriteBatch, iconBounds, RetroColorPalette.AircraftWhite);
+            this.Draw3DBorder(spriteBatch, iconBounds, 1);
+
+            // TODO: Draw actual aircraft sprite here
+
+            // Info area (right side)
+            int infoX = x + 120;
+            int infoY = y + 10;
+
+            if (AirlineTycoonGame.TextRenderer != null)
             {
-                int x = startX + (col * (cardWidth + cardSpacing));
-                int y = startY + (row * (cardHeight + cardSpacing));
+                // Registration number
+                AirlineTycoonGame.TextRenderer.DrawText(
+                    spriteBatch,
+                    aircraft.RegistrationNumber,
+                    new Vector2(infoX, infoY),
+                    Color.White
+                );
 
-                var cardBounds = new Rectangle(x, y, cardWidth, cardHeight);
+                // Aircraft type
+                AirlineTycoonGame.TextRenderer.DrawText(
+                    spriteBatch,
+                    aircraft.Type.Name,
+                    new Vector2(infoX, infoY + 15),
+                    RetroColorPalette.TextSecondary
+                );
 
-                // Card background
-                this.DrawFilledRectangle(spriteBatch, cardBounds, RetroColorPalette.Darken(RetroColorPalette.WindowBackground, 0.9f));
-                this.Draw3DBorder(spriteBatch, cardBounds, 2);
+                // Condition percentage
+                AirlineTycoonGame.TextRenderer.DrawText(
+                    spriteBatch,
+                    $"Condition: {aircraft.Condition:P0}",
+                    new Vector2(infoX, infoY + 35),
+                    RetroColorPalette.TextSecondary
+                );
+            }
 
-                // Aircraft icon area (left side)
-                var iconBounds = new Rectangle(x + 10, y + 10, 100, 100);
-                this.DrawFilledRectangle(spriteBatch, iconBounds, RetroColorPalette.AircraftWhite);
-                this.Draw3DBorder(spriteBatch, iconBounds, 1);
+            // Condition bar (like RCT's ratings)
+            var conditionBounds = new Rectangle(infoX, infoY + 55, 230, 15);
+            this.DrawFilledRectangle(spriteBatch, conditionBounds, Color.DarkGray);
 
-                // TODO: Draw actual aircraft sprite here
+            // Fill based on condition (green = good, yellow = medium, red = poor)
+            int conditionFill = (int)(aircraft.Condition * 230);
+            Color conditionColor = aircraft.Condition > 0.7 ? RetroColorPalette.Success :
+                                  aircraft.Condition > 0.4 ? RetroColorPalette.Warning :
+                                  RetroColorPalette.Error;
 
-                // Info area (right side)
-                int infoX = x + 120;
-                int infoY = y + 10;
+            var conditionFillBounds = new Rectangle(infoX, infoY + 55, conditionFill, 15);
+            this.DrawFilledRectangle(spriteBatch, conditionFillBounds, conditionColor);
+            this.Draw3DBorder(spriteBatch, conditionBounds, 1);
 
-                // Registration number area
-                var regBounds = new Rectangle(infoX, infoY, 230, 20);
-                this.DrawFilledRectangle(spriteBatch, regBounds, RetroColorPalette.Info);
+            // Lease indicator (if leased)
+            if (aircraft.IsLeased)
+            {
+                var leaseBounds = new Rectangle(infoX, infoY + 80, 230, 20);
+                this.DrawFilledRectangle(spriteBatch, leaseBounds, RetroColorPalette.Warning);
 
-                // Condition bar (like RCT's ratings)
-                var conditionBounds = new Rectangle(infoX, infoY + 30, 230, 15);
-                this.DrawFilledRectangle(spriteBatch, conditionBounds, Color.DarkGray);
-
-                // Fill based on condition (green = good, yellow = medium, red = poor)
-                int conditionFill = (row + col) % 3 == 0 ? 180 : (row + col) % 3 == 1 ? 120 : 230;
-                Color conditionColor = conditionFill > 150 ? RetroColorPalette.Success :
-                                      conditionFill > 100 ? RetroColorPalette.Warning :
-                                      RetroColorPalette.Error;
-
-                var conditionFillBounds = new Rectangle(infoX, infoY + 30, conditionFill, 15);
-                this.DrawFilledRectangle(spriteBatch, conditionFillBounds, conditionColor);
-                this.Draw3DBorder(spriteBatch, conditionBounds, 1);
-
-                // Assignment status
-                var assignmentBounds = new Rectangle(infoX, infoY + 55, 230, 20);
-                Color assignmentColor = (row + col) % 2 == 0 ? RetroColorPalette.Success : RetroColorPalette.Warning;
-                this.DrawFilledRectangle(spriteBatch, assignmentBounds, assignmentColor);
-
-                // Lease indicator (if leased)
-                if ((row + col) % 3 == 0)
+                if (AirlineTycoonGame.TextRenderer != null)
                 {
-                    var leaseBounds = new Rectangle(infoX, infoY + 85, 230, 20);
-                    this.DrawFilledRectangle(spriteBatch, leaseBounds, RetroColorPalette.Warning);
+                    AirlineTycoonGame.TextRenderer.DrawText(
+                        spriteBatch,
+                        $"LEASED - ${aircraft.MonthlyLeasePayment:N0}/mo",
+                        new Vector2(infoX + 5, infoY + 85),
+                        Color.Black
+                    );
+                }
+            }
+            else
+            {
+                // Owned indicator
+                if (AirlineTycoonGame.TextRenderer != null)
+                {
+                    AirlineTycoonGame.TextRenderer.DrawText(
+                        spriteBatch,
+                        "OWNED",
+                        new Vector2(infoX, infoY + 85),
+                        RetroColorPalette.Success
+                    );
                 }
             }
         }
