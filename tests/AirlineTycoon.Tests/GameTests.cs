@@ -25,13 +25,13 @@ public class GameTests
     }
 
     [Fact]
-    public void Game_Start_SetsIsRunningToTrue()
+    public void Game_StartNewGame_SetsIsRunningToTrue()
     {
         // Arrange
         var game = new Game();
 
         // Act
-        game.Start();
+        game.StartNewGame();
 
         // Assert
         Assert.True(game.IsRunning);
@@ -42,7 +42,7 @@ public class GameTests
     {
         // Arrange
         var game = new Game();
-        game.Start();
+        game.StartNewGame();
 
         // Act
         game.Stop();

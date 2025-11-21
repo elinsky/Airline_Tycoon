@@ -71,8 +71,11 @@ public class FinancialReportScreen : Screen
         // Expense breakdown pie chart (top right)
         this.DrawExpenseBreakdown(spriteBatch);
 
-        // Historical trend chart (bottom)
-        this.DrawHistoricalChart(spriteBatch);
+        // Fuel market information (bottom right - replaces historical chart for now)
+        this.DrawFuelMarketInfo(spriteBatch);
+
+        // Historical trend chart (disabled for now - replaced by fuel market)
+        // this.DrawHistoricalChart(spriteBatch);
 
         // Draw buttons
         base.Draw(spriteBatch, gameTime);
@@ -532,6 +535,135 @@ public class FinancialReportScreen : Screen
                 profitColor
             );
         }
+    }
+
+    /// <summary>
+    /// Draws the fuel market information panel.
+    /// </summary>
+    private void DrawFuelMarketInfo(SpriteBatch spriteBatch)
+    {
+        // Panel background
+        var panelBounds = new Rectangle(540, 420, 720, 280);
+        this.DrawFilledRectangle(spriteBatch, panelBounds, RetroColorPalette.Darken(RetroColorPalette.WindowBackground, 0.8f));
+        this.Draw3DBorder(spriteBatch, panelBounds);
+
+        // Title
+        var titleBounds = new Rectangle(550, 430, 700, 30);
+        this.DrawFilledRectangle(spriteBatch, titleBounds, RetroColorPalette.TitleBarBackground);
+
+        if (AirlineTycoonGame.TextRenderer == null)
+        {
+            return;
+        }
+
+        AirlineTycoonGame.TextRenderer.DrawText(
+            spriteBatch,
+            "Fuel Market",
+            new Vector2(560, 437),
+            Color.White
+        );
+
+        // Get fuel market data
+        var fuelMarket = this.Controller?.Game.FuelMarket;
+        if (fuelMarket == null)
+        {
+            // Show message if fuel market not available
+            AirlineTycoonGame.TextRenderer.DrawText(
+                spriteBatch,
+                "Fuel market data unavailable",
+                new Vector2(570, 490),
+                RetroColorPalette.TextSecondary
+            );
+            return;
+        }
+
+        // Info area
+        var infoBounds = new Rectangle(560, 480, 680, 200);
+        this.DrawFilledRectangle(spriteBatch, infoBounds, Color.Black);
+        this.Draw3DBorder(spriteBatch, infoBounds, 1);
+
+        // Current fuel price (large, prominent)
+        int infoY = 495;
+        int lineHeight = 35;
+
+        var priceLine = new Rectangle(570, infoY, 660, lineHeight + 5);
+        this.DrawFilledRectangle(spriteBatch, priceLine, RetroColorPalette.Darken(RetroColorPalette.Info, 0.7f));
+        this.Draw3DBorder(spriteBatch, priceLine, 1);
+        AirlineTycoonGame.TextRenderer.DrawText(
+            spriteBatch,
+            "Current Price:",
+            new Vector2(580, infoY + 7),
+            Color.White
+        );
+        AirlineTycoonGame.TextRenderer.DrawText(
+            spriteBatch,
+            $"${fuelMarket.CurrentPricePerGallon:F2}/gal",
+            new Vector2(900, infoY + 7),
+            RetroColorPalette.Info
+        );
+        infoY += lineHeight + 15;
+
+        // 30-day average
+        var avgLine = new Rectangle(570, infoY, 660, lineHeight);
+        this.DrawFilledRectangle(spriteBatch, avgLine, RetroColorPalette.Darken(RetroColorPalette.WindowBackground, 0.9f));
+        AirlineTycoonGame.TextRenderer.DrawText(
+            spriteBatch,
+            "30-Day Average:",
+            new Vector2(580, infoY + 5),
+            RetroColorPalette.TextSecondary
+        );
+        AirlineTycoonGame.TextRenderer.DrawText(
+            spriteBatch,
+            $"${fuelMarket.MovingAveragePrice:F2}/gal",
+            new Vector2(900, infoY + 5),
+            Color.White
+        );
+        infoY += lineHeight + 5;
+
+        // Change from baseline
+        var changeLine = new Rectangle(570, infoY, 660, lineHeight);
+        decimal changePercent = fuelMarket.PercentageFromBaseline;
+        Color changeColor = changePercent >= 15m ? RetroColorPalette.Error :
+                           changePercent >= 8m ? RetroColorPalette.Warning :
+                           changePercent <= -8m ? RetroColorPalette.Success :
+                           RetroColorPalette.TextSecondary;
+        this.DrawFilledRectangle(spriteBatch, changeLine, RetroColorPalette.Darken(RetroColorPalette.WindowBackground, 0.9f));
+        AirlineTycoonGame.TextRenderer.DrawText(
+            spriteBatch,
+            "Change from Baseline:",
+            new Vector2(580, infoY + 5),
+            RetroColorPalette.TextSecondary
+        );
+        string changeText = changePercent >= 0 ? $"+{changePercent:F1}%" : $"{changePercent:F1}%";
+        AirlineTycoonGame.TextRenderer.DrawText(
+            spriteBatch,
+            changeText,
+            new Vector2(900, infoY + 5),
+            changeColor
+        );
+        infoY += lineHeight + 10;
+
+        // Market status
+        var statusLine = new Rectangle(570, infoY, 660, lineHeight + 5);
+        string marketStatus = fuelMarket.GetMarketStatus();
+        Color statusColor = marketStatus.Contains("Crisis") || marketStatus.Contains("Alert") ? RetroColorPalette.Error :
+                           marketStatus.Contains("Warning") ? RetroColorPalette.Warning :
+                           marketStatus.Contains("Favorable") || marketStatus.Contains("Opportunity") ? RetroColorPalette.Success :
+                           RetroColorPalette.Info;
+        this.DrawFilledRectangle(spriteBatch, statusLine, RetroColorPalette.Darken(statusColor, 0.7f));
+        this.Draw3DBorder(spriteBatch, statusLine, 2);
+        AirlineTycoonGame.TextRenderer.DrawText(
+            spriteBatch,
+            "Market Status:",
+            new Vector2(580, infoY + 7),
+            Color.White
+        );
+        AirlineTycoonGame.TextRenderer.DrawText(
+            spriteBatch,
+            marketStatus.Split(':')[1].Trim(),
+            new Vector2(750, infoY + 7),
+            statusColor
+        );
     }
 
     /// <summary>
