@@ -26,6 +26,7 @@ public class RouteManagementScreen : Screen
     private UIButton? backButton;
     private UIButton? openRouteButton;
     private List<UIButton> assignButtons = new();
+    private bool needsButtonRebuild = true;
 
     /// <inheritdoc/>
     public override string Title => "Route Management";
@@ -62,6 +63,101 @@ public class RouteManagementScreen : Screen
         );
         this.openRouteButton.Clicked += (s, e) => this.OnOpenRoute();
         this.AddChild(this.openRouteButton);
+    }
+
+    /// <inheritdoc/>
+    public override void Update(GameTime gameTime)
+    {
+        if (this.IsVisible && this.needsButtonRebuild)
+        {
+            this.RebuildRouteButtons();
+            this.needsButtonRebuild = false;
+        }
+
+        base.Update(gameTime);
+    }
+
+    /// <summary>
+    /// Rebuilds the route action buttons (assign/unassign/close).
+    /// </summary>
+    private void RebuildRouteButtons()
+    {
+        // Get routes and fleet
+        var routes = this.Controller?.Game.PlayerAirline.Routes.ToList() ?? new List<AirlineTycoon.Domain.Route>();
+        var fleet = this.Controller?.Game.PlayerAirline.Fleet.ToList() ?? new List<AirlineTycoon.Domain.Aircraft>();
+
+        // Clear old assign buttons
+        foreach (var btn in this.assignButtons)
+        {
+            this.RemoveChild(btn);
+        }
+        this.assignButtons.Clear();
+
+        if (routes.Count == 0)
+        {
+            return;
+        }
+
+        // Route button positioning
+        int rowY = 150;
+        int rowSpacing = 40;
+
+        for (int i = 0; i < routes.Count; i++)
+        {
+            var route = routes[i];
+
+            // Add assign/unassign button
+            if (route.AssignedAircraft == null)
+            {
+                // Get available (unassigned) aircraft
+                var availableAircraft = fleet.Where(a =>
+                    !routes.Any(r => r.AssignedAircraft?.RegistrationNumber == a.RegistrationNumber)
+                ).ToList();
+
+                if (availableAircraft.Count > 0)
+                {
+                    var assignButton = new UIButton(
+                        "Assign",
+                        new Vector2(640, rowY + (i * rowSpacing) + 5),
+                        new Vector2(60, 25)
+                    );
+
+                    // Capture variables for lambda
+                    var capturedRoute = route;
+                    var capturedAvailable = availableAircraft;
+
+                    assignButton.Clicked += (s, e) => this.OnAssignAircraft(capturedRoute, capturedAvailable);
+                    this.AddChild(assignButton);
+                    this.assignButtons.Add(assignButton);
+                }
+            }
+            else
+            {
+                // Unassign button
+                var unassignButton = new UIButton(
+                    "X",
+                    new Vector2(640, rowY + (i * rowSpacing) + 5),
+                    new Vector2(25, 25)
+                );
+
+                var capturedRoute = route;
+                unassignButton.Clicked += (s, e) => this.OnUnassignAircraft(capturedRoute);
+                this.AddChild(unassignButton);
+                this.assignButtons.Add(unassignButton);
+            }
+
+            // Add close route button
+            var closeButton = new UIButton(
+                "Close",
+                new Vector2(760, rowY + (i * rowSpacing) + 5),
+                new Vector2(50, 25)
+            );
+
+            var capturedRouteForClose = route;
+            closeButton.Clicked += (s, e) => this.OnCloseRoute(capturedRouteForClose);
+            this.AddChild(closeButton);
+            this.assignButtons.Add(closeButton);
+        }
     }
 
     /// <inheritdoc/>
@@ -114,14 +210,6 @@ public class RouteManagementScreen : Screen
 
         // Get actual routes
         var routes = this.Controller?.Game.PlayerAirline.Routes.ToList() ?? new List<AirlineTycoon.Domain.Route>();
-        var fleet = this.Controller?.Game.PlayerAirline.Fleet.ToList() ?? new List<AirlineTycoon.Domain.Aircraft>();
-
-        // Clear old assign buttons
-        foreach (var btn in this.assignButtons)
-        {
-            this.RemoveChild(btn);
-        }
-        this.assignButtons.Clear();
 
         if (routes.Count == 0)
         {
@@ -194,58 +282,6 @@ public class RouteManagementScreen : Screen
                 Color statusColor = route.IsActive ? RetroColorPalette.Success : RetroColorPalette.Error;
                 AirlineTycoonGame.TextRenderer.DrawText(spriteBatch, statusText, new Vector2(710, textY), statusColor);
             }
-
-            // Add assign/unassign button
-            if (route.AssignedAircraft == null)
-            {
-                // Get available (unassigned) aircraft
-                var availableAircraft = fleet.Where(a =>
-                    !routes.Any(r => r.AssignedAircraft?.RegistrationNumber == a.RegistrationNumber)
-                ).ToList();
-
-                if (availableAircraft.Count > 0)
-                {
-                    var assignButton = new UIButton(
-                        "Assign",
-                        new Vector2(640, rowY + (i * rowSpacing) + 5),
-                        new Vector2(60, 25)
-                    );
-
-                    // Capture variables for lambda
-                    var capturedRoute = route;
-                    var capturedAvailable = availableAircraft;
-
-                    assignButton.Clicked += (s, e) => this.OnAssignAircraft(capturedRoute, capturedAvailable);
-                    this.AddChild(assignButton);
-                    this.assignButtons.Add(assignButton);
-                }
-            }
-            else
-            {
-                // Unassign button
-                var unassignButton = new UIButton(
-                    "X",
-                    new Vector2(640, rowY + (i * rowSpacing) + 5),
-                    new Vector2(25, 25)
-                );
-
-                var capturedRoute = route;
-                unassignButton.Clicked += (s, e) => this.OnUnassignAircraft(capturedRoute);
-                this.AddChild(unassignButton);
-                this.assignButtons.Add(unassignButton);
-            }
-
-            // Add close route button
-            var closeButton = new UIButton(
-                "Close",
-                new Vector2(760, rowY + (i * rowSpacing) + 5),
-                new Vector2(50, 25)
-            );
-
-            var capturedRouteForClose = route;
-            closeButton.Clicked += (s, e) => this.OnCloseRoute(capturedRouteForClose);
-            this.AddChild(closeButton);
-            this.assignButtons.Add(closeButton);
         }
     }
 
@@ -317,8 +353,11 @@ public class RouteManagementScreen : Screen
     /// </summary>
     private void OnAssignAircraft(AirlineTycoon.Domain.Route route, List<AirlineTycoon.Domain.Aircraft> availableAircraft)
     {
+        System.Diagnostics.Debug.WriteLine("OnAssignAircraft called!");
+
         if (this.Controller == null || availableAircraft.Count == 0)
         {
+            System.Diagnostics.Debug.WriteLine($"OnAssignAircraft: Controller null or no available aircraft. Controller={this.Controller != null}, Available={availableAircraft.Count}");
             return;
         }
 
@@ -326,11 +365,17 @@ public class RouteManagementScreen : Screen
         // TODO: Show a proper selection dialog
         var aircraft = availableAircraft[0];
 
+        System.Diagnostics.Debug.WriteLine($"Attempting to assign aircraft {aircraft.RegistrationNumber} to route {route.Name}");
         bool success = this.Controller.AssignAircraftToRoute(route.Id, aircraft.RegistrationNumber);
 
         if (!success)
         {
             System.Diagnostics.Debug.WriteLine($"Failed to assign aircraft {aircraft.RegistrationNumber} to route {route.Name}");
+        }
+        else
+        {
+            System.Diagnostics.Debug.WriteLine($"Successfully assigned aircraft {aircraft.RegistrationNumber} to route {route.Name}");
+            this.needsButtonRebuild = true; // Rebuild buttons to show new assignment
         }
     }
 
@@ -349,6 +394,10 @@ public class RouteManagementScreen : Screen
         if (!success)
         {
             System.Diagnostics.Debug.WriteLine($"Failed to unassign aircraft from route {route.Name}");
+        }
+        else
+        {
+            this.needsButtonRebuild = true; // Rebuild buttons to show unassignment
         }
     }
 
@@ -369,6 +418,10 @@ public class RouteManagementScreen : Screen
         if (!success)
         {
             System.Diagnostics.Debug.WriteLine($"Failed to close route {route.Name}");
+        }
+        else
+        {
+            this.needsButtonRebuild = true; // Rebuild buttons after route closure
         }
     }
 }

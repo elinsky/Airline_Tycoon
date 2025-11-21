@@ -139,7 +139,7 @@ public class DashboardScreen : Screen
         int passengersToday = airline.Routes.Sum(r => r.TotalPassengers);
         decimal profitToday = airline.Routes.Sum(r => r.DailyProfit);
         int activeRoutes = airline.Routes.Count(r => r.IsActive);
-        int totalFleet = airline.Fleet.Count();
+        int totalFleet = airline.Fleet.Count;
         int assignedAircraft = airline.Routes.Count(r => r.AssignedAircraft != null);
         decimal fleetUtilization = totalFleet > 0 ? (decimal)assignedAircraft / totalFleet : 0m;
 
@@ -194,16 +194,93 @@ public class DashboardScreen : Screen
         this.DrawFilledRectangle(spriteBatch, tickerBounds, RetroColorPalette.Darken(RetroColorPalette.WindowBackground, 0.8f));
         this.Draw3DBorder(spriteBatch, tickerBounds);
 
-        // TODO: Display recent events here once we have text rendering
-        // For now, show placeholder event boxes
-        var event1Bounds = new Rectangle(280, 500, 940, 30);
-        this.DrawFilledRectangle(spriteBatch, event1Bounds, RetroColorPalette.Info);
+        // Header
+        var headerBounds = new Rectangle(270, 490, 980, 25);
+        this.DrawFilledRectangle(spriteBatch, headerBounds, RetroColorPalette.TitleBarBackground);
 
-        var event2Bounds = new Rectangle(280, 540, 940, 30);
-        this.DrawFilledRectangle(spriteBatch, event2Bounds, RetroColorPalette.Warning);
+        if (AirlineTycoonGame.TextRenderer != null)
+        {
+            AirlineTycoonGame.TextRenderer.DrawText(
+                spriteBatch,
+                "Recent Events",
+                new Vector2(280, 495),
+                Color.White
+            );
+        }
 
-        var event3Bounds = new Rectangle(280, 580, 940, 30);
-        this.DrawFilledRectangle(spriteBatch, event3Bounds, RetroColorPalette.Success);
+        // Get actual game events
+        var airline = this.Controller?.Game.PlayerAirline;
+        if (airline == null || AirlineTycoonGame.TextRenderer == null)
+        {
+            return;
+        }
+
+        // Get recent events (sorted by day, most recent first)
+        var allEvents = airline.ActiveEvents
+            .OrderByDescending(e => e.OccurredOnDay)
+            .Take(5)
+            .ToList();
+
+        if (allEvents.Count == 0)
+        {
+            // Show "No events" message
+            AirlineTycoonGame.TextRenderer.DrawText(
+                spriteBatch,
+                "No recent events",
+                new Vector2(280, 530),
+                RetroColorPalette.TextSecondary
+            );
+            return;
+        }
+
+        // Draw event rows
+        int eventY = 525;
+        int eventRowHeight = 35;
+        int eventSpacing = 37;
+
+        for (int i = 0; i < allEvents.Count; i++)
+        {
+            var gameEvent = allEvents[i];
+            var eventBounds = new Rectangle(270, eventY + (i * eventSpacing), 980, eventRowHeight);
+
+            // Color based on event severity
+            Color eventColor = gameEvent.Severity switch
+            {
+                AirlineTycoon.Domain.Events.EventSeverity.Minor => RetroColorPalette.Info,
+                AirlineTycoon.Domain.Events.EventSeverity.Moderate => RetroColorPalette.Warning,
+                AirlineTycoon.Domain.Events.EventSeverity.Major => RetroColorPalette.Error,
+                AirlineTycoon.Domain.Events.EventSeverity.Critical => RetroColorPalette.Darken(RetroColorPalette.Error, 0.7f),
+                _ => RetroColorPalette.Info
+            };
+
+            // Darker background for event row
+            this.DrawFilledRectangle(spriteBatch, eventBounds, RetroColorPalette.Darken(RetroColorPalette.WindowBackground, 0.95f));
+
+            // Severity indicator (left edge)
+            var severityIndicator = new Rectangle(275, eventY + (i * eventSpacing) + 3, 8, eventRowHeight - 6);
+            this.DrawFilledRectangle(spriteBatch, severityIndicator, eventColor);
+
+            // Event title
+            string eventText = $"Day {gameEvent.OccurredOnDay}: {gameEvent.Title}";
+            AirlineTycoonGame.TextRenderer.DrawText(
+                spriteBatch,
+                eventText,
+                new Vector2(290, eventY + (i * eventSpacing) + 5),
+                Color.White
+            );
+
+            // Event summary (impact details)
+            string summary = gameEvent.GetSummary();
+            if (!string.IsNullOrEmpty(summary))
+            {
+                AirlineTycoonGame.TextRenderer.DrawText(
+                    spriteBatch,
+                    summary,
+                    new Vector2(290, eventY + (i * eventSpacing) + 18),
+                    RetroColorPalette.TextSecondary
+                );
+            }
+        }
     }
 
     /// <summary>
