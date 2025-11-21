@@ -89,17 +89,29 @@ public class AircraftPurchaseScreen : Screen
         // Top bar
         this.DrawTopBar(spriteBatch, gameTime);
 
-        // Draw aircraft cards
+        // Draw aircraft cards (visual only)
         this.DrawAircraftCards(spriteBatch);
 
         // Draw buttons
         base.Draw(spriteBatch, gameTime);
     }
 
+    /// <inheritdoc/>
+    public override void Update(GameTime gameTime)
+    {
+        // Rebuild purchase buttons if needed (only when visibility changes)
+        if (this.IsVisible && this.purchaseButtons.Count == 0)
+        {
+            this.RebuildPurchaseButtons();
+        }
+
+        base.Update(gameTime);
+    }
+
     /// <summary>
-    /// Draws aircraft selection cards.
+    /// Rebuilds the purchase buttons based on current affordability.
     /// </summary>
-    private void DrawAircraftCards(SpriteBatch spriteBatch)
+    private void RebuildPurchaseButtons()
     {
         var aircraftTypes = new List<AircraftType>
         {
@@ -124,6 +136,60 @@ public class AircraftPurchaseScreen : Screen
             this.RemoveChild(btn);
         }
         this.purchaseButtons.Clear();
+
+        for (int i = 0; i < aircraftTypes.Count; i++)
+        {
+            var aircraftType = aircraftTypes[i];
+            int row = i / cardsPerRow;
+            int col = i % cardsPerRow;
+            int x = startX + (col * (cardWidth + spacing));
+            int y = startY + (row * (cardHeight + spacing));
+
+            // Check if player can afford
+            decimal price = this.isLease ? (aircraftType.PurchasePrice * 0.012m) : aircraftType.PurchasePrice;
+            bool canAfford = playerCash >= price;
+
+            // Only create button if player can afford
+            if (canAfford)
+            {
+                string buttonText = this.isLease ? "Lease" : "Buy";
+                var buyButton = new UIButton(
+                    buttonText,
+                    new Vector2(x + cardWidth - 130, y + cardHeight - 45),
+                    new Vector2(120, 35)
+                );
+
+                // Capture the aircraft type in a local variable for the lambda
+                var capturedType = aircraftType;
+                buyButton.Clicked += (s, e) => this.OnPurchaseAircraft(capturedType);
+
+                this.AddChild(buyButton);
+                this.purchaseButtons.Add(buyButton);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Draws aircraft selection cards.
+    /// </summary>
+    private void DrawAircraftCards(SpriteBatch spriteBatch)
+    {
+        var aircraftTypes = new List<AircraftType>
+        {
+            AircraftType.Catalog.EmbraerE175,
+            AircraftType.Catalog.Boeing737,
+            AircraftType.Catalog.AirbusA320,
+            AircraftType.Catalog.Boeing787,
+            AircraftType.Catalog.AirbusA380
+        };
+        int cardWidth = 370;
+        int cardHeight = 200;
+        int cardsPerRow = 3;
+        int spacing = 20;
+        int startX = 40;
+        int startY = 110;
+
+        var playerCash = this.Controller?.Game.PlayerAirline.Cash ?? 0;
 
         for (int i = 0; i < aircraftTypes.Count; i++)
         {
@@ -203,26 +269,9 @@ public class AircraftPurchaseScreen : Screen
                 );
             }
 
-            // Buy/Lease button (only add if player can afford)
-            if (canAfford)
+            // Draw "Insufficient Funds" text if can't afford (buttons are created in RebuildPurchaseButtons)
+            if (!canAfford)
             {
-                string buttonText = this.isLease ? "Lease" : "Buy";
-                var buyButton = new UIButton(
-                    buttonText,
-                    new Vector2(x + cardWidth - 130, y + cardHeight - 45),
-                    new Vector2(120, 35)
-                );
-
-                // Capture the aircraft type in a local variable for the lambda
-                var capturedType = aircraftType;
-                buyButton.Clicked += (s, e) => this.OnPurchaseAircraft(capturedType);
-
-                this.AddChild(buyButton);
-                this.purchaseButtons.Add(buyButton);
-            }
-            else
-            {
-                // Draw "Can't Afford" text
                 if (AirlineTycoonGame.TextRenderer != null)
                 {
                     AirlineTycoonGame.TextRenderer.DrawText(
