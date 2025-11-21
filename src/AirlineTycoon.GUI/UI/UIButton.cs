@@ -95,8 +95,12 @@ public class UIButton : UIElement
         // Right border (dark when normal, light when pressed)
         spriteBatch.Draw(whitePixel, new Rectangle(bounds.Right - borderWidth, bounds.Y, borderWidth, bounds.Height), darkBorder);
 
-        // TODO: Draw text (requires bitmap font implementation)
-        // For now, we'll skip text rendering until we implement pixel fonts
+        // Draw button text
+        if (AirlineTycoonGame.TextRenderer != null && !string.IsNullOrEmpty(this.Text))
+        {
+            Color textColor = this.IsEnabled ? RetroColorPalette.TextPrimary : RetroColorPalette.TextDisabled;
+            AirlineTycoonGame.TextRenderer.DrawCenteredText(spriteBatch, this.Text, bounds, textColor);
+        }
 
         whitePixel.Dispose();
 

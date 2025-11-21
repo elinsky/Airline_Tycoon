@@ -148,17 +148,36 @@ public class UIPanel : UIElement
             var titleBar = this.TitleBarBounds;
             spriteBatch.Draw(whitePixel, titleBar, RetroColorPalette.TitleBarBackground);
 
+            // Draw title text
+            if (AirlineTycoonGame.TextRenderer != null && !string.IsNullOrEmpty(this.Title))
+            {
+                var textPosition = new Vector2(titleBar.X + 8, titleBar.Y + 6);
+                AirlineTycoonGame.TextRenderer.DrawText(
+                    spriteBatch,
+                    this.Title,
+                    textPosition,
+                    RetroColorPalette.TextPrimary
+                );
+            }
+
             // Draw close button if enabled
             if (this.CanClose)
             {
                 var closeButton = this.CloseButtonBounds;
                 spriteBatch.Draw(whitePixel, closeButton, RetroColorPalette.Error);
 
-                // Draw X in close button (simplified)
-                // TODO: Use proper pixel art icon once we have sprite sheets
+                // Draw X in close button
+                if (AirlineTycoonGame.TextRenderer != null)
+                {
+                    AirlineTycoonGame.TextRenderer.DrawCenteredText(
+                        spriteBatch,
+                        "X",
+                        closeButton,
+                        RetroColorPalette.TextPrimary,
+                        shadow: false
+                    );
+                }
             }
-
-            // TODO: Draw title text (requires bitmap font)
         }
 
         // Draw panel borders (3D effect)

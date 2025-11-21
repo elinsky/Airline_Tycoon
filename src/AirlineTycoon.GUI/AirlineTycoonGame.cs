@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using AirlineTycoon.GUI.Screens;
 using AirlineTycoon.GUI.UI;
+using AirlineTycoon.GUI.Rendering;
 
 namespace AirlineTycoon.GUI;
 
@@ -55,6 +56,12 @@ public class AirlineTycoonGame : Game
     public Vector2 RenderOffset { get; private set; }
 
     /// <summary>
+    /// Gets the text renderer for drawing pixel art text.
+    /// Static so all screens can access it easily.
+    /// </summary>
+    public static TextRenderer? TextRenderer { get; private set; }
+
+    /// <summary>
     /// Initializes a new instance of the <see cref="AirlineTycoonGame"/> class.
     /// </summary>
     public AirlineTycoonGame()
@@ -102,6 +109,10 @@ public class AirlineTycoonGame : Game
             0,
             RenderTargetUsage.DiscardContents
         );
+
+        // Load pixel art font
+        var pixelFont = Content.Load<SpriteFont>("PixelFont");
+        TextRenderer = new TextRenderer(pixelFont);
 
         // Initialize screen manager
         // TODO: Pass actual game instance once we integrate game logic

@@ -102,24 +102,63 @@ public abstract class Screen : UIElement
         var topBarBounds = new Rectangle(0, 0, (int)this.Size.X, 32);
         this.DrawFilledRectangle(spriteBatch, topBarBounds, RetroColorPalette.TitleBarBackground);
 
-        // TODO: Add title text and stats once we have bitmap font rendering
-        // For now, just draw colored bars to show the layout
+        if (AirlineTycoonGame.TextRenderer == null)
+        {
+            return;
+        }
 
-        // Day indicator area (left side)
+        // Day indicator (left side)
         var dayAreaBounds = new Rectangle(8, 6, 120, 20);
         this.DrawFilledRectangle(spriteBatch, dayAreaBounds, RetroColorPalette.Darken(RetroColorPalette.TitleBarBackground, 0.7f));
 
-        // Cash indicator area (center-left)
+        // TODO: Get actual day from game instance
+        string dayText = "Day 1";
+        AirlineTycoonGame.TextRenderer.DrawCenteredText(
+            spriteBatch,
+            dayText,
+            dayAreaBounds,
+            RetroColorPalette.TextPrimary,
+            shadow: false
+        );
+
+        // Cash indicator (center-left)
         var cashAreaBounds = new Rectangle(136, 6, 180, 20);
-        this.DrawFilledRectangle(spriteBatch, cashAreaBounds, RetroColorPalette.Success);
+        this.DrawFilledRectangle(spriteBatch, cashAreaBounds, RetroColorPalette.Darken(RetroColorPalette.Success, 0.5f));
 
-        // Reputation indicator area (center-right)
+        // TODO: Get actual cash from game instance
+        string cashText = "$5.0M";
+        AirlineTycoonGame.TextRenderer.DrawCenteredText(
+            spriteBatch,
+            cashText,
+            cashAreaBounds,
+            RetroColorPalette.TextPrimary,
+            shadow: false
+        );
+
+        // Reputation indicator (center-right)
         var repAreaBounds = new Rectangle(324, 6, 140, 20);
-        this.DrawFilledRectangle(spriteBatch, repAreaBounds, RetroColorPalette.Info);
+        this.DrawFilledRectangle(spriteBatch, repAreaBounds, RetroColorPalette.Darken(RetroColorPalette.Info, 0.5f));
 
-        // Menu button area (right side)
-        var menuAreaBounds = new Rectangle((int)this.Size.X - 128, 6, 120, 20);
-        this.DrawFilledRectangle(spriteBatch, menuAreaBounds, RetroColorPalette.ButtonNormal);
+        // TODO: Get actual reputation from game instance
+        string repText = "Rep: 50";
+        AirlineTycoonGame.TextRenderer.DrawCenteredText(
+            spriteBatch,
+            repText,
+            repAreaBounds,
+            RetroColorPalette.TextPrimary,
+            shadow: false
+        );
+
+        // Screen title (right side)
+        var titleAreaBounds = new Rectangle((int)this.Size.X - 320, 6, 312, 20);
+        string titleText = this.Title;
+        AirlineTycoonGame.TextRenderer.DrawRightAlignedText(
+            spriteBatch,
+            titleText,
+            new Vector2(titleAreaBounds.Right, titleAreaBounds.Y + 4),
+            RetroColorPalette.TextPrimary,
+            shadow: true
+        );
     }
 
     /// <summary>
