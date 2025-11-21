@@ -55,6 +55,150 @@ Build the most compelling airline simulation game where every gate, route, and j
 
 ---
 
+## 🎮 Phase 2.5: Pixel Art GUI & Retro Audio (NEXT)
+
+### Goal: Transform console UI into classic RCT-style pixel art experience
+
+**Why Now:** Moving GUI earlier makes development more engaging, enables better UX iteration, and lets us see the retro aesthetic come to life while building features.
+
+### 2.5.1 MonoGame Foundation
+**Goal:** Set up pixel-perfect 2D rendering framework
+
+**Features:**
+- [ ] MonoGame project setup and configuration
+  - Cross-platform support (Windows, Mac, Linux)
+  - 1280x720 base resolution (scalable)
+  - Pixel-perfect rendering pipeline
+- [ ] Retro UI framework
+  - Button system with hover/click states
+  - Panel/window system (draggable, closeable)
+  - Tooltip system
+  - Pixel font rendering (bitmap fonts)
+- [ ] Color palette system
+  - Classic RCT color scheme (greens, blues, browns)
+  - UI element theming
+  - Consistent visual style
+
+### 2.5.2 Core Game Screens
+**Goal:** Replace console UI with pixel art screens
+
+**Features:**
+- [ ] Main dashboard (RCT-style top bar)
+  - Current day, cash, reputation meters
+  - Quick stats (passengers, profit, routes)
+  - Notification ticker for events
+- [ ] Route management screen
+  - List view with sortable columns
+  - Route profitability visualization (red/green indicators)
+  - Click to view route details
+  - Open/close route buttons
+- [ ] Fleet management screen
+  - Aircraft list with icons
+  - Condition bars (like RCT ride excitement ratings)
+  - Buy/lease dialogs with pixel art aircraft previews
+- [ ] Competitor screen
+  - Airline logos/icons
+  - Comparative bar charts (passengers, revenue)
+  - Competitor route overlay
+- [ ] Financial report screen
+  - Pixel art graphs (line charts for trends)
+  - Expense breakdown pie chart
+  - Historical data view
+
+### 2.5.3 Pixel Art Assets
+**Goal:** Create retro-style visual assets
+
+**Features:**
+- [ ] UI sprite sheets
+  - Buttons (normal, hover, pressed, disabled)
+  - Windows and panels (9-slice borders)
+  - Icons (planes, airports, money, reputation stars)
+  - Cursors (pointer, hand, busy)
+- [ ] Aircraft sprites
+  - Top-down view pixel art for 5 aircraft types
+  - Multiple angles (8 directions) for flight animation
+  - Size variants (regional, narrow-body, wide-body, jumbo)
+- [ ] Airport sprites
+  - Simple terminal icons
+  - Runway indicators
+  - Hub badges/markers
+- [ ] Map visualization
+  - US map with airport locations
+  - Route lines between cities
+  - Animated planes moving along routes (optional MVP feature)
+
+### 2.5.4 Retro Audio System
+**Goal:** Old-school game audio like SNES/NES era
+
+**Features:**
+- [ ] Audio engine setup
+  - MonoGame audio framework (XACT or simple WAV playback)
+  - Volume controls (music, SFX separately)
+  - Audio mixing for overlapping sounds
+- [ ] Sound effects (8-bit/chiptune style)
+  - Button clicks and UI interactions (blip, bloop)
+  - Route opened (success jingle)
+  - Aircraft purchased (cash register cha-ching)
+  - Daily advance (soft tick/whoosh)
+  - Competitor actions (subtle alert)
+  - Event notifications (warning beep for bad events, happy chime for good)
+  - Bankruptcy warning (dramatic low tone)
+- [ ] Background music (optional for MVP)
+  - Looping chiptune track (upbeat airline/travel theme)
+  - Fade in/out system
+  - Music toggle option
+- [ ] Audio settings screen
+  - Volume sliders (pixel art)
+  - Mute toggles
+  - Sound test buttons
+
+### 2.5.5 Game Integration
+**Goal:** Wire up existing game logic to GUI
+
+**Features:**
+- [ ] Game loop refactor
+  - Separate game logic from rendering
+  - Update() and Draw() pattern
+  - Input handling (mouse, keyboard)
+- [ ] Screen state management
+  - Screen stack system (for overlays)
+  - Transitions between screens
+  - Pause/resume functionality
+- [ ] Data binding
+  - Connect UI elements to game state
+  - Real-time updates when data changes
+  - Efficient rendering (only redraw when needed)
+- [ ] Save/load integration
+  - Keep existing JSON save system
+  - Add "Load Game" screen with save previews
+  - Auto-save option
+
+### Implementation Approach
+
+**Technology Stack:**
+- **MonoGame** - C# 2D game framework (same as Stardew Valley, Celeste, Terraria)
+- **Pixel art tools** - Aseprite or Piskel for sprite creation
+- **Audio tools** - Bfxr, ChipTone, or BeepBox for 8-bit sound effects
+- **Font** - Pixel bitmap font (like RCT's classic font)
+
+**Development Strategy:**
+1. Build MonoGame shell with one screen (dashboard)
+2. Create pixel art style guide and color palette
+3. Implement UI framework (buttons, windows, etc.)
+4. Port console screens one-by-one to GUI
+5. Add pixel art assets progressively
+6. Integrate retro audio last (so gameplay is functional first)
+7. Keep console UI as fallback/debug mode
+
+**Why This Matters:**
+- Makes the game MUCH more engaging to play and develop
+- Retro pixel art aesthetic attracts players nostalgic for RCT/Transport Tycoon
+- GUI enables better visualization of routes, competition, and economy
+- Audio creates atmosphere and feedback that console can't provide
+- Sets foundation for future polish (animations, particles, effects)
+
+---
+
 ## 📊 Phase 3: Sophisticated Economy Simulator
 
 ### 3.1 Macroeconomic System
