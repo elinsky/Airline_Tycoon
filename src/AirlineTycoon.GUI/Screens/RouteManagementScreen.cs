@@ -234,6 +234,18 @@ public class RouteManagementScreen : Screen
                 this.AddChild(unassignButton);
                 this.assignButtons.Add(unassignButton);
             }
+
+            // Add close route button
+            var closeButton = new UIButton(
+                "Close",
+                new Vector2(760, rowY + (i * rowSpacing) + 5),
+                new Vector2(50, 25)
+            );
+
+            var capturedRouteForClose = route;
+            closeButton.Clicked += (s, e) => this.OnCloseRoute(capturedRouteForClose);
+            this.AddChild(closeButton);
+            this.assignButtons.Add(closeButton);
         }
     }
 
@@ -337,6 +349,26 @@ public class RouteManagementScreen : Screen
         if (!success)
         {
             System.Diagnostics.Debug.WriteLine($"Failed to unassign aircraft from route {route.Name}");
+        }
+    }
+
+    /// <summary>
+    /// Handles closing a route.
+    /// </summary>
+    private void OnCloseRoute(AirlineTycoon.Domain.Route route)
+    {
+        if (this.Controller == null)
+        {
+            return;
+        }
+
+        // TODO: Add confirmation dialog in future
+        // For now, close immediately
+        bool success = this.Controller.CloseRoute(route.Origin.Code, route.Destination.Code);
+
+        if (!success)
+        {
+            System.Diagnostics.Debug.WriteLine($"Failed to close route {route.Name}");
         }
     }
 }
