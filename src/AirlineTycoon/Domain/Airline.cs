@@ -104,10 +104,11 @@ public class Airline
     /// Advances the game by one day, processing all operations.
     /// This is the core game loop, similar to RCT's daily park update.
     /// </summary>
+    /// <param name="fuelMarket">Optional fuel market for dynamic fuel pricing.</param>
     /// <returns>A summary of the day's operations.</returns>
-    public DailyOperationsSummary ProcessDay()
+    public DailyOperationsSummary ProcessDay(FuelMarket? fuelMarket = null)
     {
-        return this.ProcessDay(null);
+        return this.ProcessDay(null, fuelMarket);
     }
 
     /// <summary>
@@ -115,8 +116,9 @@ public class Airline
     /// Calculates market share when multiple airlines serve the same routes.
     /// </summary>
     /// <param name="competitors">List of competitor airlines for market share calculations.</param>
+    /// <param name="fuelMarket">Optional fuel market for dynamic fuel pricing.</param>
     /// <returns>A summary of the day's operations.</returns>
-    public DailyOperationsSummary ProcessDay(List<CompetitorAirline>? competitors)
+    public DailyOperationsSummary ProcessDay(List<CompetitorAirline>? competitors, FuelMarket? fuelMarket = null)
     {
         this.CurrentDay++;
 
@@ -131,7 +133,7 @@ public class Airline
         foreach (var route in this.Routes.Where(r => r.IsActive && r.AssignedAircraft != null))
         {
             // Simulate the route's daily operations (with competition if applicable)
-            var routeResult = this.SimulateRouteDay(route, competitors);
+            var routeResult = this.SimulateRouteDay(route, competitors, fuelMarket);
 
             dailyRevenue += routeResult.Revenue;
             dailyCosts += routeResult.Costs;
@@ -186,7 +188,8 @@ public class Airline
     /// </summary>
     /// <param name="route">The route to simulate.</param>
     /// <param name="competitors">Optional list of competitors for market share calculations.</param>
-    private RouteOperationsResult SimulateRouteDay(Route route, List<CompetitorAirline>? competitors)
+    /// <param name="fuelMarket">Optional fuel market for dynamic fuel pricing.</param>
+    private RouteOperationsResult SimulateRouteDay(Route route, List<CompetitorAirline>? competitors, FuelMarket? fuelMarket = null)
     {
         if (route.AssignedAircraft == null)
         {
@@ -243,7 +246,7 @@ public class Airline
         decimal revenue = passengers * route.TicketPrice;
 
         // Calculate costs
-        decimal fuelCost = CalculateFuelCost(route.DistanceNauticalMiles, aircraft.Type, route.DailyFlights);
+        decimal fuelCost = CalculateFuelCost(route.DistanceNauticalMiles, aircraft.Type, route.DailyFlights, fuelMarket);
         decimal crewCost = CalculateCrewCost(route.FlightTimeHours, route.DailyFlights);
         decimal airportFees = (route.Origin.LandingFee + route.Destination.LandingFee) * route.DailyFlights;
         decimal maintenanceCost = aircraft.Type.OperatingCostPerHour * (decimal)route.FlightTimeHours * route.DailyFlights * 0.15m;
@@ -300,10 +303,15 @@ public class Airline
     /// Calculates fuel cost for a flight segment.
     /// Based on distance, aircraft fuel consumption, and current fuel price.
     /// </summary>
-    private static decimal CalculateFuelCost(int distanceNM, AircraftType aircraftType, int flights)
+    /// <param name="distanceNM">Distance in nautical miles.</param>
+    /// <param name="aircraftType">Type of aircraft (determines fuel consumption).</param>
+    /// <param name="flights">Number of flights per day.</param>
+    /// <param name="fuelMarket">Optional fuel market for dynamic pricing. If null, uses static $3.00/gal.</param>
+    /// <returns>Total fuel cost for the flight segment.</returns>
+    private static decimal CalculateFuelCost(int distanceNM, AircraftType aircraftType, int flights, FuelMarket? fuelMarket = null)
     {
-        // Fuel price approximately $3.00 per gallon (typical jet fuel)
-        const decimal fuelPricePerGallon = 3.00m;
+        // Use dynamic fuel price if market available, otherwise default to $3.00/gal
+        decimal fuelPricePerGallon = fuelMarket?.CurrentPricePerGallon ?? 3.00m;
 
         // Total fuel consumption for all flights
         decimal totalFuelGallons = aircraftType.FuelConsumptionPerHour * flights;

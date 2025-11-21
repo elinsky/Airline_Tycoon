@@ -26,6 +26,7 @@ public class Game
     private bool isRunning;
     private readonly EventGenerator eventGenerator;
     private readonly AirlineAI airlineAI;
+    private readonly FuelMarket fuelMarket;
 
     /// <summary>
     /// Gets the name of the game.
@@ -36,6 +37,11 @@ public class Game
     /// Gets the current version of the game.
     /// </summary>
     public static string Version => "1.0.0";
+
+    /// <summary>
+    /// Gets the global fuel market that tracks dynamic fuel pricing.
+    /// </summary>
+    public FuelMarket FuelMarket => this.fuelMarket;
 
     /// <summary>
     /// Gets a value indicating whether the game is currently running.
@@ -76,6 +82,7 @@ public class Game
     {
         this.eventGenerator = new EventGenerator();
         this.airlineAI = new AirlineAI();
+        this.fuelMarket = new FuelMarket();
     }
 
     /// <summary>
@@ -171,6 +178,9 @@ public class Game
             throw new InvalidOperationException("Cannot process day without a player airline.");
         }
 
+        // Update fuel market for the new day
+        this.fuelMarket.UpdateMarket(this.PlayerAirline.CurrentDay + 1);
+
         // Try to generate a random event (12% chance per day)
         var newEvent = this.eventGenerator.TryGenerateEvent(
             this.PlayerAirline.CurrentDay + 1, // Next day since ProcessDay increments it
@@ -181,10 +191,13 @@ public class Game
         if (newEvent != null)
         {
             this.PlayerAirline.ActiveEvents.Add(newEvent);
+
+            // TODO: Apply fuel market shocks when FuelCrisisEvent is implemented
+            // Future: check event type and call fuelMarket.ApplyMarketShock() for fuel-related events
         }
 
-        // Process the day's operations (with competition)
-        var summary = this.PlayerAirline.ProcessDay(this.Competitors);
+        // Process the day's operations (with competition and dynamic fuel pricing)
+        var summary = this.PlayerAirline.ProcessDay(this.Competitors, this.fuelMarket);
 
         // Add new event to summary so UI can display it
         if (newEvent != null)
@@ -201,8 +214,8 @@ public class Game
             // AI makes strategic decisions (routes, pricing, aircraft)
             this.airlineAI.ProcessTurn(competitor, allAirlines, this.PlayerAirline.CurrentDay);
 
-            // Process the competitor's daily operations (with competition)
-            competitor.Airline.ProcessDay(this.Competitors);
+            // Process the competitor's daily operations (with competition and dynamic fuel pricing)
+            competitor.Airline.ProcessDay(this.Competitors, this.fuelMarket);
         }
 
         // Check win/lose conditions
