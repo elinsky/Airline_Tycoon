@@ -1,15 +1,53 @@
 # Airline Tycoon
 
-A C# project for building an airline tycoon simulation game.
+A C# airline simulation and management game inspired by RollerCoaster Tycoon. Build and operate your own airline empire from a regional carrier to a global aviation powerhouse.
 
-## Prerequisites
+## 🎮 About the Game
 
+**Airline Tycoon** combines route planning, fleet management, and business strategy in a turn-based simulation. Manage your airline through:
+- **Route Network** - Open profitable routes between 15+ airports
+- **Fleet Management** - Buy or lease aircraft from regional jets to wide-bodies
+- **Financial Strategy** - Balance revenue, costs, and cash flow
+- **Competition** - Compete against AI airlines for market share
+- **Random Events** - Adapt to weather, economic shifts, and market changes
+- **Reputation System** - Build your brand to attract more passengers
+
+### Current Status
+✅ **Playable MVP** - Core gameplay loop complete with save/load system
+🚧 **In Development** - See [ROADMAP.md](ROADMAP.md) for upcoming features
+
+## 📋 Roadmap
+
+See our comprehensive [Product Roadmap](ROADMAP.md) for planned features including:
+- AI Competitor Airlines
+- Sophisticated Economy Simulator
+- Aircraft Maintenance & Crew Management
+- International Routes & Global Expansion
+- Scenario Mode with challenges
+- And much more!
+
+## 🚀 Quick Start
+
+### Playing the Game
+
+```bash
+# Clone and setup
+git clone <repository-url>
+cd Airline_Tycoon
+./setup.sh
+
+# Run the game
+dotnet run --project src/AirlineTycoon
+```
+
+### Development Setup
+
+**Prerequisites:**
 - macOS (Intel or Apple Silicon)
 - Homebrew package manager
 - Admin access (for .NET SDK installation)
 
-## Quick Start
-
+**Setup Steps:**
 1. Clone this repository
 2. Run the setup script:
    ```bash
