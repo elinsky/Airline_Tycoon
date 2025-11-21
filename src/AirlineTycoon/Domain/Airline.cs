@@ -1,3 +1,5 @@
+using AirlineTycoon.Domain.Events;
+
 namespace AirlineTycoon.Domain;
 
 /// <summary>
@@ -47,6 +49,12 @@ public class Airline
     /// Like RCT's paths and attractions, routes are where the business happens.
     /// </summary>
     public List<Route> Routes { get; init; } = [];
+
+    /// <summary>
+    /// Gets the list of active random events currently affecting the airline.
+    /// Like RCT's event log, this tracks ongoing events and their effects.
+    /// </summary>
+    public List<GameEvent> ActiveEvents { get; init; } = [];
 
     /// <summary>
     /// Gets or sets the airline's reputation rating from 0 (terrible) to 100 (excellent).
@@ -100,6 +108,9 @@ public class Airline
     {
         this.CurrentDay++;
 
+        // Remove expired events
+        this.ActiveEvents.RemoveAll(e => !e.IsActive(this.CurrentDay));
+
         decimal dailyRevenue = 0m;
         decimal dailyCosts = 0m;
         int passengersCarried = 0;
@@ -124,8 +135,13 @@ public class Airline
         // Add lease payments to daily costs
         dailyCosts += this.GetDailyLeaseCosts();
 
+        // Apply event financial impacts (one-time costs/bonuses from new events)
+        decimal eventImpact = this.ActiveEvents
+            .Where(e => e.OccurredOnDay == this.CurrentDay)
+            .Sum(e => e.FinancialImpact);
+
         // Update airline financial state
-        decimal dailyProfit = dailyRevenue - dailyCosts;
+        decimal dailyProfit = dailyRevenue - dailyCosts + eventImpact;
         this.Cash += dailyProfit;
         this.TotalRevenue += dailyRevenue;
         this.TotalCosts += dailyCosts;
@@ -133,6 +149,12 @@ public class Airline
 
         // Update reputation based on performance
         this.UpdateReputation(passengersCarried);
+
+        // Apply event reputation impacts
+        int eventReputationImpact = this.ActiveEvents
+            .Where(e => e.OccurredOnDay == this.CurrentDay)
+            .Sum(e => e.ReputationImpact);
+        this.Reputation = Math.Clamp(this.Reputation + eventReputationImpact, 0, 100);
 
         return new DailyOperationsSummary
         {
@@ -164,7 +186,11 @@ public class Airline
 
         // Apply reputation modifier (higher reputation = more demand)
         double reputationModifier = 0.5 + (this.Reputation / 100.0); // 0.5x to 1.5x
-        int adjustedDemand = (int)(basedemand * reputationModifier);
+
+        // Apply event demand modifiers (weather, market events, etc.)
+        double eventDemandModifier = this.GetActiveEventDemandModifier();
+
+        int adjustedDemand = (int)(basedemand * reputationModifier * eventDemandModifier);
 
         // Calculate capacity
         int dailyCapacity = aircraft.Type.Capacity * route.DailyFlights;
@@ -184,7 +210,12 @@ public class Airline
         decimal airportFees = (route.Origin.LandingFee + route.Destination.LandingFee) * route.DailyFlights;
         decimal maintenanceCost = aircraft.Type.OperatingCostPerHour * (decimal)route.FlightTimeHours * route.DailyFlights * 0.15m;
 
-        decimal totalCosts = fuelCost + crewCost + airportFees + maintenanceCost;
+        decimal baseCosts = fuelCost + crewCost + airportFees + maintenanceCost;
+
+        // Apply event cost modifiers (fuel price spikes, strikes, etc.)
+        double eventCostModifier = this.GetActiveEventCostModifier();
+        decimal totalCosts = baseCosts * (decimal)eventCostModifier;
+
         decimal profit = revenue - totalCosts;
 
         return new RouteOperationsResult
@@ -292,6 +323,38 @@ public class Airline
     }
 
     /// <summary>
+    /// Gets the aggregate demand modifier from all active events.
+    /// Multiple events multiply together (e.g., 1.2 * 0.8 = 0.96).
+    /// </summary>
+    private double GetActiveEventDemandModifier()
+    {
+        if (!this.ActiveEvents.Any())
+        {
+            return 1.0;
+        }
+
+        return this.ActiveEvents
+            .Where(e => e.IsActive(this.CurrentDay))
+            .Aggregate(1.0, (current, evt) => current * evt.DemandModifier);
+    }
+
+    /// <summary>
+    /// Gets the aggregate cost modifier from all active events.
+    /// Multiple events multiply together (e.g., 1.3 * 1.1 = 1.43).
+    /// </summary>
+    private double GetActiveEventCostModifier()
+    {
+        if (!this.ActiveEvents.Any())
+        {
+            return 1.0;
+        }
+
+        return this.ActiveEvents
+            .Where(e => e.IsActive(this.CurrentDay))
+            .Aggregate(1.0, (current, evt) => current * evt.CostModifier);
+    }
+
+    /// <summary>
     /// Opens a new route between two airports.
     /// Like building a new ride in RCT, this expands the business.
     /// </summary>
@@ -382,6 +445,7 @@ public record DailyOperationsSummary
     public required int PassengersCarried { get; init; }
     public required decimal CashBalance { get; init; }
     public required int Reputation { get; init; }
+    public List<GameEvent> NewEvents { get; init; } = [];
 }
 
 /// <summary>

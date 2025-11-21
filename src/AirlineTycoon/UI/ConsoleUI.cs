@@ -1,5 +1,6 @@
 using System.Text;
 using AirlineTycoon.Domain;
+using AirlineTycoon.Domain.Events;
 using AirlineTycoon.Services;
 
 namespace AirlineTycoon.UI;
@@ -650,6 +651,67 @@ public class ConsoleUI
         else if (summary.Profit < 0)
         {
             Console.WriteLine("📉 Warning: Losing money! Review your routes and pricing.");
+        }
+
+        // Display any new events that occurred
+        if (summary.NewEvents.Count > 0)
+        {
+            Console.WriteLine();
+            Console.WriteLine("═══════════════════ EVENTS ═══════════════════");
+            Console.WriteLine();
+            foreach (var evt in summary.NewEvents)
+            {
+                // Event icon based on type
+                string icon = evt.Type switch
+                {
+                    Domain.Events.EventType.Weather => "🌩️",
+                    Domain.Events.EventType.Economic => "💹",
+                    Domain.Events.EventType.Operational => "⚙️",
+                    Domain.Events.EventType.Market => "📊",
+                    Domain.Events.EventType.PositivePR => "✨",
+                    Domain.Events.EventType.NegativePR => "⚠️",
+                    _ => "📢"
+                };
+
+                // Severity indicator
+                string severityColor = evt.Severity switch
+                {
+                    Domain.Events.EventSeverity.Critical => "!!",
+                    Domain.Events.EventSeverity.Major => "!",
+                    Domain.Events.EventSeverity.Moderate => "*",
+                    _ => ""
+                };
+
+                Console.WriteLine($"{icon} {evt.Title} {severityColor}");
+                Console.WriteLine($"   {evt.Description}");
+                Console.WriteLine();
+
+                // Show event effects
+                string effects = evt.GetSummary();
+                if (!string.IsNullOrEmpty(effects))
+                {
+                    Console.WriteLine($"   Effects: {effects}");
+                    Console.WriteLine();
+                }
+            }
+        }
+
+        // Show active ongoing events
+        var activeEvents = this.game.PlayerAirline!.ActiveEvents
+            .Where(e => e.IsActive(summary.Day))
+            .ToList();
+
+        if (activeEvents.Count > 0)
+        {
+            Console.WriteLine();
+            Console.WriteLine("─────────────────────────────────────────────────");
+            Console.WriteLine($"Active Events ({activeEvents.Count}):");
+            Console.WriteLine();
+            foreach (var evt in activeEvents)
+            {
+                int daysRemaining = evt.ExpiresOnDay - summary.Day;
+                Console.WriteLine($"• {evt.Title} ({daysRemaining} days remaining)");
+            }
         }
 
         Console.WriteLine();

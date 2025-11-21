@@ -1,4 +1,6 @@
 using AirlineTycoon.Domain;
+using AirlineTycoon.Domain.Events;
+using AirlineTycoon.Services;
 
 namespace AirlineTycoon;
 
@@ -13,6 +15,7 @@ namespace AirlineTycoon;
 /// - Processing game turns (days)
 /// - Tracking win/lose conditions
 /// - Managing game state (running, paused, game over)
+/// - Generating random events to create dynamic gameplay
 ///
 /// Like RCT, the game runs in discrete time steps (days) where all operations
 /// are processed and results are calculated.
@@ -20,6 +23,7 @@ namespace AirlineTycoon;
 public class Game
 {
     private bool isRunning;
+    private readonly EventGenerator eventGenerator;
 
     /// <summary>
     /// Gets the name of the game.
@@ -56,6 +60,14 @@ public class Game
     /// Gets whether the current game has been lost (bankruptcy or scenario failure).
     /// </summary>
     public bool HasLost => this.PlayerAirline?.IsBankrupt ?? false;
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="Game"/> class.
+    /// </summary>
+    public Game()
+    {
+        this.eventGenerator = new EventGenerator();
+    }
 
     /// <summary>
     /// Starts a new game session with a starter airline.
@@ -129,8 +141,26 @@ public class Game
             throw new InvalidOperationException("Cannot process day without a player airline.");
         }
 
+        // Try to generate a random event (12% chance per day)
+        var newEvent = this.eventGenerator.TryGenerateEvent(
+            this.PlayerAirline.CurrentDay + 1, // Next day since ProcessDay increments it
+            this.PlayerAirline
+        );
+
+        // If an event was generated, add it to active events
+        if (newEvent != null)
+        {
+            this.PlayerAirline.ActiveEvents.Add(newEvent);
+        }
+
         // Process the day's operations
         var summary = this.PlayerAirline.ProcessDay();
+
+        // Add new event to summary so UI can display it
+        if (newEvent != null)
+        {
+            summary.NewEvents.Add(newEvent);
+        }
 
         // Check win/lose conditions
         this.CheckWinConditions();
