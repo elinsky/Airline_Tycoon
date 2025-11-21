@@ -494,12 +494,12 @@ public class GameController
         return this.saveGameService.DeleteSave(saveName);
     }
 
-    /// <summary>
-    /// Shows the save/load screen.
-    /// </summary>
-    public void ShowSaveLoad()
-    {
-        var saveLoadScreen = new SaveLoadScreen(this);
-        this.screenManager.SwitchTo(saveLoadScreen);
-    }
+    // /// <summary>
+    // /// Shows the save/load screen.
+    // /// </summary>
+    // public void ShowSaveLoad()
+    // {
+    //     var saveLoadScreen = new SaveLoadScreen(this);
+    //     this.screenManager.SwitchTo(saveLoadScreen);
+    // }
 }
