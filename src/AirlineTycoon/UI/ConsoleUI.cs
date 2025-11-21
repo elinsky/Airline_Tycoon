@@ -1,5 +1,6 @@
 using System.Text;
 using AirlineTycoon.Domain;
+using AirlineTycoon.Services;
 
 namespace AirlineTycoon.UI;
 
@@ -23,6 +24,7 @@ namespace AirlineTycoon.UI;
 public class ConsoleUI
 {
     private readonly Game game;
+    private readonly SaveGameService saveService;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ConsoleUI"/> class.
@@ -31,6 +33,7 @@ public class ConsoleUI
     public ConsoleUI(Game game)
     {
         this.game = game;
+        this.saveService = new SaveGameService();
     }
 
     /// <summary>
@@ -81,6 +84,40 @@ public class ConsoleUI
         Console.WriteLine("Inspired by the legendary RollerCoaster Tycoon,");
         Console.WriteLine("your goal is to build a profitable airline empire.");
         Console.WriteLine();
+        Console.WriteLine("[1] New Game");
+        Console.WriteLine("[2] Load Game");
+        Console.WriteLine("[3] Quit");
+        Console.WriteLine();
+        Console.Write("Enter your choice: ");
+        string? choice = Console.ReadLine();
+
+        switch (choice?.Trim())
+        {
+            case "1":
+                this.StartNewGameFlow();
+                break;
+            case "2":
+                this.LoadGameFlow();
+                break;
+            case "3":
+                Environment.Exit(0);
+                break;
+            default:
+                Console.WriteLine("Invalid choice. Starting new game...");
+                System.Threading.Thread.Sleep(1000);
+                this.StartNewGameFlow();
+                break;
+        }
+    }
+
+    /// <summary>
+    /// Handles the new game flow (asking for airline name, starting game).
+    /// </summary>
+    private void StartNewGameFlow()
+    {
+        Console.Clear();
+        Console.WriteLine("═══════════════════ NEW GAME ═══════════════════");
+        Console.WriteLine();
         Console.Write("Enter your airline name (or press Enter for 'SkyWings Airlines'): ");
         string? airlineName = Console.ReadLine();
         if (string.IsNullOrWhiteSpace(airlineName))
@@ -96,6 +133,91 @@ public class ConsoleUI
         Console.ReadKey();
 
         this.game.StartNewGame(airlineName);
+    }
+
+    /// <summary>
+    /// Handles the load game flow (showing saved games, loading selected game).
+    /// </summary>
+    private void LoadGameFlow()
+    {
+        Console.Clear();
+        Console.WriteLine("═══════════════════ LOAD GAME ═══════════════════");
+        Console.WriteLine();
+
+        var saves = this.saveService.ListSaves();
+
+        if (saves.Count == 0)
+        {
+            Console.WriteLine("No saved games found.");
+            Console.WriteLine();
+            Console.WriteLine("Press any key to return to main menu...");
+            Console.ReadKey();
+            this.ShowWelcomeScreen();
+            return;
+        }
+
+        Console.WriteLine("Available Saves:");
+        Console.WriteLine();
+        for (int i = 0; i < saves.Count; i++)
+        {
+            var save = saves[i];
+            Console.WriteLine($"[{i + 1}] {save.AirlineName}");
+            Console.WriteLine($"    Day {save.CurrentDay} | Cash: ${save.Cash:N0} | Reputation: {save.Reputation}/100");
+            Console.WriteLine($"    Saved: {save.SavedAt.ToLocalTime():g}");
+            Console.WriteLine();
+        }
+
+        Console.WriteLine("[B] Back to Main Menu");
+        Console.WriteLine();
+        Console.Write("Select save to load: ");
+        string? input = Console.ReadLine();
+
+        if (input?.ToUpper() == "B")
+        {
+            this.ShowWelcomeScreen();
+            return;
+        }
+
+        if (int.TryParse(input, out int index) && index >= 1 && index <= saves.Count)
+        {
+            var selectedSave = saves[index - 1];
+            try
+            {
+                Console.WriteLine();
+                Console.WriteLine($"Loading {selectedSave.AirlineName}...");
+
+                var loadedGame = this.saveService.LoadGame(selectedSave.FileName);
+
+                // Replace the current game with the loaded one
+                // We need to transfer the loaded state to our current game instance
+                this.game.LoadFromSave(
+                    loadedGame.PlayerAirline!,
+                    loadedGame.CurrentScenario,
+                    loadedGame.HasWon
+                );
+
+                Console.WriteLine("✓ Game loaded successfully!");
+                Console.WriteLine();
+                Console.WriteLine("Press any key to continue...");
+                Console.ReadKey();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"✗ Error loading game: {ex.Message}");
+                Console.WriteLine();
+                Console.WriteLine("Press any key to return to main menu...");
+                Console.ReadKey();
+                this.ShowWelcomeScreen();
+            }
+        }
+        else
+        {
+            Console.WriteLine("Invalid selection.");
+            Console.WriteLine();
+            Console.WriteLine("Press any key to try again...");
+            Console.ReadKey();
+            this.LoadGameFlow();
+        }
     }
 
     /// <summary>
@@ -612,12 +734,77 @@ public class ConsoleUI
     }
 
     /// <summary>
-    /// Saves the game (placeholder for now).
+    /// Saves the current game to a file.
     /// </summary>
     private void SaveGame()
     {
+        Console.Clear();
+        Console.WriteLine("═══════════════════ SAVE GAME ═══════════════════");
         Console.WriteLine();
-        Console.WriteLine("Save functionality coming soon!");
+
+        if (this.game.PlayerAirline == null)
+        {
+            Console.WriteLine("✗ No active game to save!");
+            Console.WriteLine();
+            Console.WriteLine("Press any key to continue...");
+            Console.ReadKey();
+            return;
+        }
+
+        // Show existing saves to help user choose unique name
+        var existingSaves = this.saveService.ListSaves();
+        if (existingSaves.Count > 0)
+        {
+            Console.WriteLine("Existing saves:");
+            foreach (var save in existingSaves.Take(5))
+            {
+                Console.WriteLine($"  - {save.SaveName} ({save.AirlineName}, Day {save.CurrentDay})");
+            }
+            Console.WriteLine();
+        }
+
+        // Generate default save name
+        string defaultName = $"{this.game.PlayerAirline.Name}_Day{this.game.PlayerAirline.CurrentDay}";
+
+        Console.Write($"Enter save name (or press Enter for '{defaultName}'): ");
+        string? saveName = Console.ReadLine();
+        if (string.IsNullOrWhiteSpace(saveName))
+        {
+            saveName = defaultName;
+        }
+
+        // Check if save exists
+        if (this.saveService.SaveExists(saveName))
+        {
+            Console.WriteLine();
+            Console.Write($"Save '{saveName}' already exists. Overwrite? (y/n): ");
+            string? confirm = Console.ReadLine();
+            if (confirm?.ToLower() != "y")
+            {
+                Console.WriteLine("Save cancelled.");
+                Console.WriteLine();
+                Console.WriteLine("Press any key to continue...");
+                Console.ReadKey();
+                return;
+            }
+        }
+
+        try
+        {
+            Console.WriteLine();
+            Console.WriteLine("Saving game...");
+
+            string filePath = this.saveService.SaveGame(this.game, saveName);
+
+            Console.WriteLine($"✓ Game saved successfully to: {Path.GetFileName(filePath)}");
+            Console.WriteLine($"   Location: {this.saveService.GetType().Name}");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"✗ Error saving game: {ex.Message}");
+        }
+
+        Console.WriteLine();
         Console.WriteLine("Press any key to continue...");
         Console.ReadKey();
     }

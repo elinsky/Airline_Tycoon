@@ -169,6 +169,21 @@ public class Game
     }
 
     /// <summary>
+    /// Loads a game from saved state.
+    /// Restores the airline, scenario, and win status.
+    /// </summary>
+    /// <param name="airline">The saved airline state.</param>
+    /// <param name="scenario">The saved scenario (null for free play).</param>
+    /// <param name="hasWon">Whether the player had won.</param>
+    public void LoadFromSave(Airline airline, Scenario? scenario, bool hasWon)
+    {
+        this.PlayerAirline = airline;
+        this.CurrentScenario = scenario;
+        this.HasWon = hasWon;
+        this.isRunning = true;
+    }
+
+    /// <summary>
     /// Stops the current game session.
     /// </summary>
     public void Stop()
