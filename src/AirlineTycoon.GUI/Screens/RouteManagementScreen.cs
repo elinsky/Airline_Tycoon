@@ -26,6 +26,7 @@ public class RouteManagementScreen : Screen
     private UIButton? backButton;
     private UIButton? openRouteButton;
     private List<UIButton> assignButtons = new();
+    private List<UIButton> priceButtons = new();
     private bool needsButtonRebuild = true;
 
     /// <inheritdoc/>
@@ -78,7 +79,7 @@ public class RouteManagementScreen : Screen
     }
 
     /// <summary>
-    /// Rebuilds the route action buttons (assign/unassign/close).
+    /// Rebuilds the route action buttons (assign/unassign/close/price adjustment).
     /// </summary>
     private void RebuildRouteButtons()
     {
@@ -86,12 +87,18 @@ public class RouteManagementScreen : Screen
         var routes = this.Controller?.Game.PlayerAirline.Routes.ToList() ?? new List<AirlineTycoon.Domain.Route>();
         var fleet = this.Controller?.Game.PlayerAirline.Fleet.ToList() ?? new List<AirlineTycoon.Domain.Aircraft>();
 
-        // Clear old assign buttons
+        // Clear old buttons
         foreach (var btn in this.assignButtons)
         {
             this.RemoveChild(btn);
         }
         this.assignButtons.Clear();
+
+        foreach (var btn in this.priceButtons)
+        {
+            this.RemoveChild(btn);
+        }
+        this.priceButtons.Clear();
 
         if (routes.Count == 0)
         {
@@ -105,6 +112,28 @@ public class RouteManagementScreen : Screen
         for (int i = 0; i < routes.Count; i++)
         {
             var route = routes[i];
+
+            // Add price decrease button (-)
+            var decreasePriceButton = new UIButton(
+                "-",
+                new Vector2(305, rowY + (i * rowSpacing) + 5),
+                new Vector2(20, 25)
+            );
+            var capturedRouteDecrease = route;
+            decreasePriceButton.Clicked += (s, e) => this.OnDecreasePrice(capturedRouteDecrease);
+            this.AddChild(decreasePriceButton);
+            this.priceButtons.Add(decreasePriceButton);
+
+            // Add price increase button (+)
+            var increasePriceButton = new UIButton(
+                "+",
+                new Vector2(330, rowY + (i * rowSpacing) + 5),
+                new Vector2(20, 25)
+            );
+            var capturedRouteIncrease = route;
+            increasePriceButton.Clicked += (s, e) => this.OnIncreasePrice(capturedRouteIncrease);
+            this.AddChild(increasePriceButton);
+            this.priceButtons.Add(increasePriceButton);
 
             // Add assign/unassign button
             if (route.AssignedAircraft == null)
@@ -422,6 +451,35 @@ public class RouteManagementScreen : Screen
         else
         {
             this.needsButtonRebuild = true; // Rebuild buttons after route closure
+        }
+    }
+
+    /// <summary>
+    /// Handles increasing the ticket price for a route.
+    /// Increases price by $10 increments.
+    /// </summary>
+    private void OnIncreasePrice(AirlineTycoon.Domain.Route route)
+    {
+        // Increase ticket price by $10
+        route.TicketPrice += 10m;
+        System.Diagnostics.Debug.WriteLine($"Increased ticket price for {route.Name} to ${route.TicketPrice:N0}");
+    }
+
+    /// <summary>
+    /// Handles decreasing the ticket price for a route.
+    /// Decreases price by $10 increments, minimum $10.
+    /// </summary>
+    private void OnDecreasePrice(AirlineTycoon.Domain.Route route)
+    {
+        // Decrease ticket price by $10, but don't go below $10
+        if (route.TicketPrice > 10m)
+        {
+            route.TicketPrice -= 10m;
+            System.Diagnostics.Debug.WriteLine($"Decreased ticket price for {route.Name} to ${route.TicketPrice:N0}");
+        }
+        else
+        {
+            System.Diagnostics.Debug.WriteLine($"Cannot decrease price below $10 for {route.Name}");
         }
     }
 }
