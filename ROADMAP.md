@@ -1,6 +1,6 @@
 # Airline Tycoon - Product Roadmap
 
-*Last Updated: 2025-01-20*
+*Last Updated: 2025-11-21*
 
 ## Vision
 Build the most compelling airline simulation game where every gate, route, and jet matters. Players progress from regional carriers to global aviation empires while competing against AI airlines in dynamic markets.
@@ -262,14 +262,11 @@ Build the most compelling airline simulation game where every gate, route, and j
   - Change daily flights per route
   - Affects revenue and costs
 
-**Current Status:** Phase 2.5.5 Game Integration is COMPLETE:
-- ✅ **Phase A (Foundation)**: Complete - Screen management, data binding, basic UI
-- ✅ **Phase B (Core Gameplay)**: Complete - Aircraft assignment, route management, fully playable game loop
-- ✅ **Phase C (Enhanced Screens)**: Complete - Competitor analysis, financial reports, aircraft lifecycle management, price adjustment
-- ✅ **Priority 3 (Dashboard Real Data)**: Complete - Live statistics display, event tracking
-- ⏸️ **Phase D (Polish)**: Deferred - Save/load and route frequency features postponed
+**Current Status:** Phase 3.1 Dynamic Fuel Pricing is COMPLETE:
+- ✅ **Phase 2.5.5 (Game Integration)**: Complete - Fully playable game with MonoGame GUI
+- ✅ **Phase 3.1 Feature 1 (Dynamic Fuel Pricing)**: Complete - Realistic fuel market simulation with GUI display
 
-**The game is now fully playable with complete GUI integration!** All major screens display real game data. Players can purchase/lease aircraft, open routes, assign planes, adjust pricing, perform maintenance, and sell/return aircraft. Dashboard shows live statistics and recent events. The entire Phase 2.5 (MonoGame GUI Implementation) is complete.
+**Latest Achievement:** Dynamic fuel pricing system implemented with FuelMarket class, realistic oil market simulation, daily volatility, seasonal variations, and long-term trends. Fuel prices now affect route profitability and are displayed in the Financial Report screen with real-time market status.
 
 ### Implementation Approach
 
@@ -307,10 +304,14 @@ Build the most compelling airline simulation game where every gate, route, and j
   - Boom, growth, recession, depression phases
   - GDP growth tracking
   - Unemployment rate effects on demand
-- [ ] Dynamic fuel pricing
-  - Oil market simulation with OPEC decisions
-  - Seasonal variations
-  - Geopolitical event impacts
+- [x] Dynamic fuel pricing (COMPLETE)
+  - FuelMarket class with realistic oil market simulation
+  - Daily volatility (70% ±2%, 20% ±5%, 10% ±10%)
+  - Seasonal variations (Winter +8%, Spring +2%, Summer +12%, Fall -5%)
+  - Long-term trends (30-day cycles)
+  - Price bounds ($1.50-$6.00/gal)
+  - Integrated into game loop and route profitability
+  - GUI display in Financial Report screen with market status
 - [ ] Currency exchange rates
   - Multi-currency system for international routes
   - Forex volatility
