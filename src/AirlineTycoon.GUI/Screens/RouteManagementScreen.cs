@@ -30,8 +30,10 @@ public class RouteManagementScreen : Screen
     /// <summary>
     /// Initializes a new instance of the <see cref="RouteManagementScreen"/> class.
     /// </summary>
-    public RouteManagementScreen()
+    /// <param name="controller">The game controller.</param>
+    public RouteManagementScreen(GameController controller)
     {
+        this.SetGameController(controller);
         this.InitializeUI();
     }
 
@@ -176,8 +178,7 @@ public class RouteManagementScreen : Screen
     /// </summary>
     private void OnBack()
     {
-        // TODO: Return to dashboard
-        System.Diagnostics.Debug.WriteLine("Back to dashboard");
+        this.Controller?.ShowDashboard();
     }
 
     /// <summary>

@@ -27,9 +27,9 @@ public abstract class Screen : UIElement
     public abstract string Title { get; }
 
     /// <summary>
-    /// Gets the game instance for accessing game data.
+    /// Gets the game controller for accessing game data and navigation.
     /// </summary>
-    protected Game? GameInstance { get; private set; }
+    protected GameController? Controller { get; private set; }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="Screen"/> class.
@@ -42,21 +42,21 @@ public abstract class Screen : UIElement
     }
 
     /// <summary>
-    /// Sets the game instance for this screen.
-    /// Called by ScreenManager when the screen is activated.
+    /// Sets the game controller for this screen.
+    /// Called when the screen is created.
     /// </summary>
-    /// <param name="game">The game instance.</param>
-    public void SetGameInstance(Game? game)
+    /// <param name="controller">The game controller.</param>
+    public void SetGameController(GameController? controller)
     {
-        this.GameInstance = game;
-        this.OnGameInstanceSet();
+        this.Controller = controller;
+        this.OnControllerSet();
     }
 
     /// <summary>
-    /// Called when the game instance is set.
+    /// Called when the game controller is set.
     /// Override to load data or initialize UI based on game state.
     /// </summary>
-    protected virtual void OnGameInstanceSet()
+    protected virtual void OnControllerSet()
     {
         // Override in derived classes
     }
@@ -111,8 +111,9 @@ public abstract class Screen : UIElement
         var dayAreaBounds = new Rectangle(8, 6, 120, 20);
         this.DrawFilledRectangle(spriteBatch, dayAreaBounds, RetroColorPalette.Darken(RetroColorPalette.TitleBarBackground, 0.7f));
 
-        // TODO: Get actual day from game instance
-        string dayText = "Day 1";
+        string dayText = this.Controller?.Game.PlayerAirline != null
+            ? $"Day {this.Controller.Game.PlayerAirline.CurrentDay}"
+            : "Day 1";
         AirlineTycoonGame.TextRenderer.DrawCenteredText(
             spriteBatch,
             dayText,
@@ -125,8 +126,9 @@ public abstract class Screen : UIElement
         var cashAreaBounds = new Rectangle(136, 6, 180, 20);
         this.DrawFilledRectangle(spriteBatch, cashAreaBounds, RetroColorPalette.Darken(RetroColorPalette.Success, 0.5f));
 
-        // TODO: Get actual cash from game instance
-        string cashText = "$5.0M";
+        string cashText = this.Controller?.Game.PlayerAirline != null
+            ? Rendering.TextRenderer.FormatCurrency(this.Controller.Game.PlayerAirline.Cash)
+            : "$5.0M";
         AirlineTycoonGame.TextRenderer.DrawCenteredText(
             spriteBatch,
             cashText,
@@ -139,8 +141,9 @@ public abstract class Screen : UIElement
         var repAreaBounds = new Rectangle(324, 6, 140, 20);
         this.DrawFilledRectangle(spriteBatch, repAreaBounds, RetroColorPalette.Darken(RetroColorPalette.Info, 0.5f));
 
-        // TODO: Get actual reputation from game instance
-        string repText = "Rep: 50";
+        string repText = this.Controller?.Game.PlayerAirline != null
+            ? $"Rep: {this.Controller.Game.PlayerAirline.Reputation}"
+            : "Rep: 50";
         AirlineTycoonGame.TextRenderer.DrawCenteredText(
             spriteBatch,
             repText,

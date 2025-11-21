@@ -29,8 +29,10 @@ public class CompetitorScreen : Screen
     /// <summary>
     /// Initializes a new instance of the <see cref="CompetitorScreen"/> class.
     /// </summary>
-    public CompetitorScreen()
+    /// <param name="controller">The game controller.</param>
+    public CompetitorScreen(GameController controller)
     {
+        this.SetGameController(controller);
         this.InitializeUI();
     }
 
@@ -271,6 +273,6 @@ public class CompetitorScreen : Screen
     /// </summary>
     private void OnBack()
     {
-        System.Diagnostics.Debug.WriteLine("Back to dashboard");
+        this.Controller?.ShowDashboard();
     }
 }

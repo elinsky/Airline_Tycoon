@@ -20,7 +20,6 @@ namespace AirlineTycoon.GUI.Screens;
 public class ScreenManager
 {
     private Screen? currentScreen;
-    private readonly Game? gameInstance;
 
     /// <summary>
     /// Gets the currently active screen.
@@ -30,10 +29,8 @@ public class ScreenManager
     /// <summary>
     /// Initializes a new instance of the <see cref="ScreenManager"/> class.
     /// </summary>
-    /// <param name="game">The game instance to pass to screens.</param>
-    public ScreenManager(Game? game = null)
+    public ScreenManager()
     {
-        this.gameInstance = game;
     }
 
     /// <summary>
@@ -47,7 +44,6 @@ public class ScreenManager
 
         // Switch to new screen
         this.currentScreen = newScreen;
-        this.currentScreen.SetGameInstance(this.gameInstance);
         this.currentScreen.OnActivated();
     }
 

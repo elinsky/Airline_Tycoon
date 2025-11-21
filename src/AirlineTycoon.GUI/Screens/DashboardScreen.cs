@@ -32,8 +32,10 @@ public class DashboardScreen : Screen
     /// <summary>
     /// Initializes a new instance of the <see cref="DashboardScreen"/> class.
     /// </summary>
-    public DashboardScreen()
+    /// <param name="controller">The game controller.</param>
+    public DashboardScreen(GameController controller)
     {
+        this.SetGameController(controller);
         this.InitializeUI();
     }
 
@@ -184,8 +186,7 @@ public class DashboardScreen : Screen
     /// </summary>
     private void OnViewRoutes()
     {
-        // TODO: Switch to RouteManagementScreen
-        System.Diagnostics.Debug.WriteLine("View Routes clicked!");
+        this.Controller?.ShowRouteManagement();
     }
 
     /// <summary>
@@ -193,8 +194,7 @@ public class DashboardScreen : Screen
     /// </summary>
     private void OnViewFleet()
     {
-        // TODO: Switch to FleetManagementScreen
-        System.Diagnostics.Debug.WriteLine("View Fleet clicked!");
+        this.Controller?.ShowFleetManagement();
     }
 
     /// <summary>
@@ -202,8 +202,7 @@ public class DashboardScreen : Screen
     /// </summary>
     private void OnViewCompetitors()
     {
-        // TODO: Switch to CompetitorScreen
-        System.Diagnostics.Debug.WriteLine("View Competitors clicked!");
+        this.Controller?.ShowCompetitors();
     }
 
     /// <summary>
@@ -211,8 +210,7 @@ public class DashboardScreen : Screen
     /// </summary>
     private void OnViewFinancials()
     {
-        // TODO: Switch to FinancialReportScreen
-        System.Diagnostics.Debug.WriteLine("View Financials clicked!");
+        this.Controller?.ShowFinancialReport();
     }
 
     /// <summary>
@@ -220,14 +218,15 @@ public class DashboardScreen : Screen
     /// </summary>
     private void OnAdvanceDay()
     {
-        // TODO: Call game.ProcessDay() and refresh UI
-        System.Diagnostics.Debug.WriteLine("Advance Day clicked!");
-
-        if (this.GameInstance != null)
+        if (this.Controller != null)
         {
-            // Process the day
-            // var summary = this.GameInstance.ProcessDay();
-            // Refresh UI with new data
+            // Process the day and get results
+            var summary = this.Controller.AdvanceDay();
+
+            // TODO: Show a summary modal or notification with the day's results
+            // For now, just log it
+            System.Diagnostics.Debug.WriteLine($"Day advanced! Passengers: {summary.PassengersCarried}, " +
+                $"Revenue: ${summary.Revenue:N0}, Costs: ${summary.Costs:N0}");
         }
     }
 }

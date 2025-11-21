@@ -29,8 +29,10 @@ public class FinancialReportScreen : Screen
     /// <summary>
     /// Initializes a new instance of the <see cref="FinancialReportScreen"/> class.
     /// </summary>
-    public FinancialReportScreen()
+    /// <param name="controller">The game controller.</param>
+    public FinancialReportScreen(GameController controller)
     {
+        this.SetGameController(controller);
         this.InitializeUI();
     }
 
@@ -277,6 +279,6 @@ public class FinancialReportScreen : Screen
     /// </summary>
     private void OnBack()
     {
-        System.Diagnostics.Debug.WriteLine("Back to dashboard");
+        this.Controller?.ShowDashboard();
     }
 }

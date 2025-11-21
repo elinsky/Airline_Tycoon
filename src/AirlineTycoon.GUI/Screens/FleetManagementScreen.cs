@@ -30,8 +30,10 @@ public class FleetManagementScreen : Screen
     /// <summary>
     /// Initializes a new instance of the <see cref="FleetManagementScreen"/> class.
     /// </summary>
-    public FleetManagementScreen()
+    /// <param name="controller">The game controller.</param>
+    public FleetManagementScreen(GameController controller)
     {
+        this.SetGameController(controller);
         this.InitializeUI();
     }
 
@@ -223,7 +225,7 @@ public class FleetManagementScreen : Screen
     /// </summary>
     private void OnBack()
     {
-        System.Diagnostics.Debug.WriteLine("Back to dashboard");
+        this.Controller?.ShowDashboard();
     }
 
     /// <summary>

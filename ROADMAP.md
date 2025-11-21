@@ -124,9 +124,13 @@ Build the most compelling airline simulation game where every gate, route, and j
   - Icons (planes, airports, money, reputation stars)
   - Cursors (pointer, hand, busy)
 - [ ] Aircraft sprites **(Deferred to future phase)**
-  - Top-down view pixel art for 5 aircraft types
+  - Top-down view pixel art for aircraft types:
+    - **Regional:** CRJ-700, ERJ-175
+    - **Narrow-body:** Boeing 737 (737-800, 737 MAX), Airbus A320 (A320neo)
+    - **Wide-body:** Boeing 787 Dreamliner, Boeing 777 (777-300ER), Airbus A350, Airbus A330
+    - **Jumbo:** Boeing 747 (passenger/cargo variants)
   - Multiple angles (8 directions) for flight animation
-  - Size variants (regional, narrow-body, wide-body, jumbo)
+  - Size variants to visually distinguish aircraft categories
 - [ ] Airport sprites **(Deferred to future phase)**
   - Simple terminal icons
   - Runway indicators
@@ -167,22 +171,24 @@ Build the most compelling airline simulation game where every gate, route, and j
 **Goal:** Wire up existing game logic to GUI
 
 **Features:**
-- [ ] Game loop refactor
-  - Separate game logic from rendering
-  - Update() and Draw() pattern
-  - Input handling (mouse, keyboard)
-- [ ] Screen state management
-  - Screen stack system (for overlays)
-  - Transitions between screens
-  - Pause/resume functionality
-- [ ] Data binding
-  - Connect UI elements to game state
-  - Real-time updates when data changes
-  - Efficient rendering (only redraw when needed)
-- [ ] Save/load integration
+- [x] Game loop refactor
+  - Separate game logic from rendering via GameController
+  - Update() and Draw() pattern implemented
+  - Input handling (mouse) fully functional
+- [x] Screen state management
+  - ScreenManager handles screen transitions
+  - Navigation between screens working
+  - All screens access game data via Controller
+- [x] Data binding
+  - Top bar displays real game data (Day, Cash, Reputation)
+  - GameController bridges GUI and game logic
+  - Button handlers call controller methods
+- [ ] Save/load integration **(Deferred)**
   - Keep existing JSON save system
   - Add "Load Game" screen with save previews
   - Auto-save option
+
+**Status:** Core integration complete! GUI now displays real game data and screen navigation works. Advance Day button processes actual game turns. Save/load deferred to later phase.
 
 ### Implementation Approach
 
@@ -341,9 +347,9 @@ Build the most compelling airline simulation game where every gate, route, and j
   - South America (GRU, EZE)
   - Africa (JNB, CAI)
 - [ ] Long-haul aircraft
-  - Boeing 777, 787-9
-  - Airbus A350, A330
-  - Ultra-long-range routes
+  - Boeing 777 (777-200LR, 777-300ER), 787 Dreamliner (787-8, 787-9, 787-10)
+  - Airbus A350 (A350-900, A350-1000), A330 (A330-200, A330-300, A330neo)
+  - Ultra-long-range routes (SIN-JFK, PER-LHR)
 - [ ] International regulations
   - Bilateral air service agreements
   - Foreign ownership restrictions

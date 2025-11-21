@@ -22,7 +22,7 @@ namespace AirlineTycoon.GUI;
 /// 2. Scale the render target to fit the window while maintaining aspect ratio
 /// 3. Use Point sampling to keep pixels sharp (no blurring)
 /// </remarks>
-public class AirlineTycoonGame : Game
+public class AirlineTycoonGame : Microsoft.Xna.Framework.Game
 {
     private readonly GraphicsDeviceManager graphics;
     private SpriteBatch spriteBatch = null!;
@@ -115,11 +115,11 @@ public class AirlineTycoonGame : Game
         TextRenderer = new TextRenderer(pixelFont);
 
         // Initialize screen manager
-        // TODO: Pass actual game instance once we integrate game logic
-        this.screenManager = new ScreenManager(game: null);
+        this.screenManager = new ScreenManager();
 
-        // Start with the dashboard screen
-        this.screenManager.SwitchTo(new DashboardScreen());
+        // Create game controller and start new game
+        var controller = new GameController(this.screenManager);
+        controller.StartNewGame();  // This will initialize the game and navigate to dashboard
     }
 
     /// <summary>
