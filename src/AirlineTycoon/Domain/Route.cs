@@ -90,6 +90,12 @@ public class Route
     public int OpenedOnDay { get; init; }
 
     /// <summary>
+    /// Gets the number of days this route has been operating.
+    /// Used by AI to decide whether to close unprofitable routes.
+    /// </summary>
+    public int DaysOperating { get; private set; }
+
+    /// <summary>
     /// Gets a descriptive name for this route (e.g., "JFK → LAX").
     /// </summary>
     public string Name => $"{this.Origin.Code} → {this.Destination.Code}";
@@ -112,6 +118,7 @@ public class Route
         this.LoadFactor = loadFactor;
         this.DailyProfit = profit;
         this.TotalPassengers += passengers;
+        this.DaysOperating++;
     }
 
     /// <summary>

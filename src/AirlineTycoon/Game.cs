@@ -1,4 +1,5 @@
 using AirlineTycoon.Domain;
+using AirlineTycoon.Domain.AI;
 using AirlineTycoon.Domain.Events;
 using AirlineTycoon.Services;
 
@@ -24,6 +25,7 @@ public class Game
 {
     private bool isRunning;
     private readonly EventGenerator eventGenerator;
+    private readonly AirlineAI airlineAI;
 
     /// <summary>
     /// Gets the name of the game.
@@ -47,6 +49,12 @@ public class Game
     public Airline? PlayerAirline { get; private set; }
 
     /// <summary>
+    /// Gets the list of AI competitor airlines.
+    /// Like competing parks in RCT, these create dynamic competition.
+    /// </summary>
+    public List<CompetitorAirline> Competitors { get; private set; } = [];
+
+    /// <summary>
     /// Gets the current scenario being played (null for free play mode).
     /// </summary>
     public Scenario? CurrentScenario { get; private set; }
@@ -67,6 +75,7 @@ public class Game
     public Game()
     {
         this.eventGenerator = new EventGenerator();
+        this.airlineAI = new AirlineAI();
     }
 
     /// <summary>
@@ -107,6 +116,27 @@ public class Game
         // Assign aircraft to starter routes
         route1.AssignAircraft(this.PlayerAirline.Fleet[0]);
         route2.AssignAircraft(this.PlayerAirline.Fleet[1]);
+
+        // Create AI competitor airlines
+        this.Competitors = CompetitorAirline.CreateDefaultCompetitors();
+
+        // Give each competitor a starter aircraft and route
+        foreach (var competitor in this.Competitors)
+        {
+            // Lease one aircraft
+            competitor.Airline.LeaseAircraft(AircraftType.Catalog.Boeing737);
+
+            // Open one route from their home hub
+            var competitorHome = Airport.Catalog.FindByCode(competitor.Airline.HomeHub)!;
+            var nearbyAirport = Airport.Catalog.All
+                .Where(a => a.Code != competitor.Airline.HomeHub)
+                .OrderBy(a => Route.CalculateDistance(competitor.Airline.HomeHub, a.Code))
+                .First();
+
+            decimal competitorPrice = 200m * (decimal)competitor.Personality.PricingModifier;
+            var competitorRoute = competitor.Airline.OpenRoute(competitorHome, nearbyAirport, competitorPrice);
+            competitorRoute.AssignAircraft(competitor.Airline.Fleet[0]);
+        }
     }
 
     /// <summary>
@@ -160,6 +190,19 @@ public class Game
         if (newEvent != null)
         {
             summary.NewEvents.Add(newEvent);
+        }
+
+        // Process AI competitor turns
+        var allAirlines = new List<Airline> { this.PlayerAirline };
+        allAirlines.AddRange(this.Competitors.Select(c => c.Airline));
+
+        foreach (var competitor in this.Competitors)
+        {
+            // AI makes strategic decisions (routes, pricing, aircraft)
+            this.airlineAI.ProcessTurn(competitor, allAirlines, this.PlayerAirline.CurrentDay);
+
+            // Process the competitor's daily operations
+            competitor.Airline.ProcessDay();
         }
 
         // Check win/lose conditions
